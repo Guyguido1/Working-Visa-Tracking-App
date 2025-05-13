@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Add this at the end of your globals.css file */
+
+/* Force table text to be white in dark mode */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table tr,
+[data-theme="dark"] .table tbody,
+[data-theme="dark"] .table thead {
+  color: #ffffff !important;
+}
+
+/* Force card text to be white in dark mode */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-content {
+  color: #ffffff !important;
+}
+
+/* Force all text elements to be white in dark mode */
+[data-theme="dark"] p,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] label {
+  color: #ffffff !important;
+}
+
+/* Exceptions for elements that should remain dark */
+[data-theme="dark"] .btn-ghost,
+[data-theme="dark"] .btn-outline {
+  color: inherit !important;
+}
+
+/* Add this to the end of your globals.css file */
+
+/* Calendar specific overrides for dark mode */
+[data-theme="dark"] .customer-calendar button {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .customer-calendar button.today {
+  color: #90cdf4 !important; /* lighter blue for better visibility */
+  border-color: #90cdf4 !important;
+}
+
+[data-theme="dark"] .customer-calendar .text-gray-500,
+[data-theme="dark"] .customer-calendar .text-gray-600,
+[data-theme="dark"] .customer-calendar .text-blue-600,
+[data-theme="dark"] .customer-calendar .text-blue-800 {
+  color: #90cdf4 !important; /* lighter blue for better visibility */
+}
+
+/* Auth form exception for dark mode */
+[data-theme="dark"] .auth-form,
+[data-theme="dark"] .auth-form h1,
+[data-theme="dark"] .auth-form p,
+[data-theme="dark"] .auth-form label,
+[data-theme="dark"] .auth-form div,
+[data-theme="dark"] .auth-form span,
+[data-theme="dark"] .auth-form input {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .auth-form input {
+  background-color: #ffffff !important;
+}
+
+/* Delete note modal exception for dark mode */
+[data-theme="dark"] .delete-note-modal,
+[data-theme="dark"] .delete-note-modal h3,
+[data-theme="dark"] .delete-note-modal p {
+  color: #000000 !important;
+}
+
+/* Delete note modal buttons in dark mode */
+[data-theme="dark"] .delete-note-modal .btn {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .delete-note-modal .btn-error {
+  color: #ffffff !important;
+}
+
+/* Form label spacing to prevent overlap with focus rings */
+.form-label-spacing {
+  margin-bottom: 0.5rem;
+}
