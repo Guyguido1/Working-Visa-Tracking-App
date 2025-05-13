@@ -128,6 +128,15 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
     return customer
   })
 
+  // ADDED: Debug log to print all customer birthdates
+  console.log(
+    "🧪 ALL DOBs:",
+    transformedCustomers.map((c) => ({
+      name: c.first_name,
+      dob: c.date_of_birth,
+    })),
+  )
+
   // Current date for comparisons
   const currentDate = new Date()
   const in15Days = new Date()
@@ -160,7 +169,7 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate,
   )
 
-  // COMPLETELY REPLACED: Birthday filtering logic with exact day/month matching
+  // Birthday filtering logic with exact day/month matching
   const today = new Date()
   const tomorrow = new Date()
   tomorrow.setDate(today.getDate() + 1)
