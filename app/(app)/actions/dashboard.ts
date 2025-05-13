@@ -160,7 +160,7 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate,
   )
 
-  // COMPLETELY REPLACED: Birthday filtering logic with exact 2-day match
+  // REPLACED: Birthday filtering logic with exact code provided
   const today = new Date()
   const tomorrow = new Date()
   tomorrow.setDate(today.getDate() + 1)
