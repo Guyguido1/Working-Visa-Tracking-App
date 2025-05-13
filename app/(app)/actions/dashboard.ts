@@ -164,7 +164,7 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate
   )
 
- // 🎂 Birthday filtering logic (match exact month & day only)
+ // // Birthday filtering logic with exact month & day matching
 const today = new Date()
 const tomorrow = new Date()
 tomorrow.setDate(today.getDate() + 1)
@@ -185,8 +185,8 @@ const birthdays = transformedCustomers.filter((customer) => {
     (birthMonth === todayMonth && birthDate === todayDate) ||
     (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-  // 🧪 Deep debug log (visible in Vercel)
-  console.log("🧪 DOB Check", {
+  // Deep debug log to track logic
+  console.log("\ud83c\udf7a DOB Check", {
     name: customer.first_name,
     date_of_birth: customer.date_of_birth,
     birthMonth,
