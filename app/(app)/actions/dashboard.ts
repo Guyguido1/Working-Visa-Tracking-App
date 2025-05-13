@@ -160,22 +160,30 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate,
   )
 
+  // UPDATED: Filter birthdays to only include today and tomorrow
   const birthdays = transformedCustomers.filter((customer) => {
     if (!customer.date_of_birth) return false
 
     const birthDate = new Date(customer.date_of_birth)
     const today = new Date()
 
-    // Set birth date to current year for comparison
-    const birthDateThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+    // Create date objects for today and tomorrow
+    const todayDate = today.getDate()
+    const todayMonth = today.getMonth()
 
-    // If birthday already passed this year, set to next year
-    if (birthDateThisYear < today) {
-      birthDateThisYear.setFullYear(today.getFullYear() + 1)
-    }
+    const tomorrowDate = new Date()
+    tomorrowDate.setDate(today.getDate() + 1)
+    const tomorrowDay = tomorrowDate.getDate()
+    const tomorrowMonth = tomorrowDate.getMonth()
 
-    // Check if birthday is within the next 30 days
-    return birthDateThisYear <= in30Days && birthDateThisYear >= today
+    // Check if birthday is today (same month and day)
+    const isBirthdayToday = birthDate.getDate() === todayDate && birthDate.getMonth() === todayMonth
+
+    // Check if birthday is tomorrow (same month and day)
+    const isBirthdayTomorrow = birthDate.getDate() === tomorrowDay && birthDate.getMonth() === tomorrowMonth
+
+    // Include if birthday is either today or tomorrow
+    return isBirthdayToday || isBirthdayTomorrow
   })
 
   // Customers with no imminent reports or expiring visas
