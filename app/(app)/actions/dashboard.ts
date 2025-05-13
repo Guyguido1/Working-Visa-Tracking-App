@@ -164,44 +164,42 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate
   )
 
-  // 🎂 Birthday filter: today and tomorrow only
-  const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(today.getDate() + 1)
+ // 🎂 Birthday filtering logic (match exact month & day only)
+const today = new Date()
+const tomorrow = new Date()
+tomorrow.setDate(today.getDate() + 1)
 
-  const todayMonth = today.getMonth()
-  const todayDate = today.getDate()
-  const tomorrowMonth = tomorrow.getMonth()
-  const tomorrowDate = tomorrow.getDate()
+const todayMonth = today.getMonth()
+const todayDate = today.getDate()
+const tomorrowMonth = tomorrow.getMonth()
+const tomorrowDate = tomorrow.getDate()
 
-  const birthdays = transformedCustomers.filter((customer) => {
-    if (!customer.date_of_birth) return false
+const birthdays = transformedCustomers.filter((customer) => {
+  if (!customer.date_of_birth) return false
 
-    const birth = new Date(customer.date_of_birth)
-    const birthMonth = birth.getMonth()
-    const birthDate = birth.getDate()
+  const birth = new Date(customer.date_of_birth)
+  const birthMonth = birth.getMonth()
+  const birthDate = birth.getDate()
 
-    const isMatch =
-      (birthMonth === todayMonth && birthDate === todayDate) ||
-      (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+  const isMatch =
+    (birthMonth === todayMonth && birthDate === todayDate) ||
+    (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-    if (isMatch) {
-      console.log("🧪 DOB Debug:", {
-        name: customer.first_name,
-        rawDOB: customer.date_of_birth,
-        parsedDOB: birth,
-        birthMonth,
-        birthDate,
-        todayMonth,
-        todayDate,
-        tomorrowMonth,
-        tomorrowDate,
-        isMatch,
-      })
-    }
-
-    return isMatch
+  // 🧪 Deep debug log (visible in Vercel)
+  console.log("🧪 DOB Check", {
+    name: customer.first_name,
+    date_of_birth: customer.date_of_birth,
+    birthMonth,
+    birthDate,
+    todayMonth,
+    todayDate,
+    tomorrowMonth,
+    tomorrowDate,
+    isMatch,
   })
+
+  return isMatch
+})
 
   const visaReportNotDue = transformedCustomers.filter(
     (customer) =>
