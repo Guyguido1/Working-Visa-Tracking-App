@@ -157,25 +157,24 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
   )
 
   // ✅ Birthday filtering logic (exact match day & month)
-  const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(today.getDate() + 1)
+const today = new Date()
+const tomorrow = new Date()
+tomorrow.setDate(today.getDate() + 1)
 
-  const todayMonth = today.getMonth()
-  const todayDate = today.getDate()
-  const tomorrowMonth = tomorrow.getMonth()
-  const tomorrowDate = tomorrow.getDate()
+const todayMonth = today.getMonth()
+const todayDate = today.getDate()
+const tomorrowMonth = tomorrow.getMonth()
+const tomorrowDate = tomorrow.getDate()
 
-  const birthdays = transformedCustomers.filter((customer) => {
-    if (!customer.date_of_birth) return false
+const birthdays = transformedCustomers.filter((customer) => {
+  if (!customer.date_of_birth) return false
 
-    const birth = new Date(customer.date_of_birth)
-    const birthMonth = birth.getMonth()
-    const birthDate = birth.getDate()
+  const birth = new Date(customer.date_of_birth)
+  const birthMonth = birth.getMonth()
+  const birthDate = birth.getDate()
 
-    const isMatch =
-      (birthMonth === todayMonth && birthDate === todayDate) ||
-      (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+  return (birthMonth === todayMonth && birthDate === todayDate) ||
+         (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
     // Debug log for tracing
     console.log("🎂 DOB Check", {
