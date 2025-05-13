@@ -51,6 +51,16 @@ const formatDate = (dateValue: string | Date | null | undefined): string => {
 export default function DashboardContent({ counts, categories }: DashboardContentProps) {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("allCustomers")
 
+  // Get customers for the active category
+  const getActiveCustomers = () => {
+    // Add safety check for categories[activeCategory]
+    if (!categories[activeCategory]) {
+      console.error(`Category ${activeCategory} not found in categories:`, categories)
+      return []
+    }
+    return categories[activeCategory]
+  }
+
   // Add runtime guards to check for invalid data
   if (!counts || typeof counts !== "object") {
     console.error("Invalid counts object:", counts)
@@ -74,6 +84,10 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     console.error("Error object received in categories:", categories)
     return <div className="p-4 bg-red-50 rounded-lg">Error loading dashboard: {categories.name}</div>
   }
+
+  // Add debug logging for categories
+  console.log("🧪 Active category:", activeCategory)
+  console.log("🧪 Customers shown in UI:", getActiveCustomers())
 
   const statCards = [
     {
@@ -126,16 +140,6 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     return card ? card.title : "Customers"
   }
 
-  // Get customers for the active category
-  const getActiveCustomers = () => {
-    // Add safety check for categories[activeCategory]
-    if (!categories[activeCategory]) {
-      console.error(`Category ${activeCategory} not found in categories:`, categories)
-      return []
-    }
-    return categories[activeCategory]
-  }
-
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -159,6 +163,12 @@ export default function DashboardContent({ counts, categories }: DashboardConten
 
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4">{getCategoryTitle()} List</h2>
+
+        {/* Debug label */}
+        <p className="text-sm text-gray-500 mb-2">
+          Debug: showing {getActiveCustomers().length} customers for category "{activeCategory}"
+        </p>
+
         <div className="card bg-base-200 shadow-xl">
           <div className="card-body">
             <div className="overflow-x-auto">
