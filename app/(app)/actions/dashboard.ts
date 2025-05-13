@@ -128,15 +128,6 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
     return customer
   })
 
-  // ADDED: Debug log to print all customer birthdates
-  console.log(
-    "🧪 ALL DOBs:",
-    transformedCustomers.map((c) => ({
-      name: c.first_name,
-      dob: c.date_of_birth,
-    })),
-  )
-
   // Current date for comparisons
   const currentDate = new Date()
   const in15Days = new Date()
@@ -192,20 +183,6 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       (birthMonth === todayMonth && birthDate === todayDate) ||
       (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-    // ADDED: Deep debug logging for birthday filter
-    console.log("🧪 DOB Debug:", {
-      name: customer.first_name,
-      rawDOB: customer.date_of_birth,
-      parsedDOB: birth,
-      birthMonth,
-      birthDate,
-      todayMonth,
-      todayDate,
-      tomorrowMonth,
-      tomorrowDate,
-      isMatch,
-    })
-
     return isMatch
   })
 
@@ -216,6 +193,9 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       !visaExpiring30Days.some((c) => c.id === customer.id) &&
       !passportExpiring30Days.some((c) => c.id === customer.id),
   )
+
+  // ADDED: Debug log to confirm the final filtered birthdays count
+  console.log("✅ Final filtered birthdays count:", birthdays.length)
 
   return {
     counts: {
@@ -232,7 +212,7 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       reportsDue15Days,
       visaExpiring30Days,
       passportExpiring30Days,
-      birthdays,
+      birthdays, // Ensuring this is the filtered birthdays array
     },
   }
 }
