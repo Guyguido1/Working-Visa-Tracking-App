@@ -160,7 +160,7 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate,
   )
 
-  // REPLACED: Birthday filtering logic with exact code provided
+  // COMPLETELY REPLACED: Birthday filtering logic with exact day/month matching
   const today = new Date()
   const tomorrow = new Date()
   tomorrow.setDate(today.getDate() + 1)
@@ -178,10 +178,16 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
     const birthMonth = birth.getMonth()
     const birthDate = birth.getDate()
 
-    return (
+    // Debug logging to see which customers are being included
+    const isMatch =
       (birthMonth === todayMonth && birthDate === todayDate) ||
       (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
-    )
+
+    if (isMatch) {
+      console.log("🧪 Birthday Match:", customer.first_name, customer.date_of_birth)
+    }
+
+    return isMatch
   })
 
   // Customers with no imminent reports or expiring visas
