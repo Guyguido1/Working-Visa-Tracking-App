@@ -192,9 +192,19 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       (birthMonth === todayMonth && birthDate === todayDate) ||
       (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-    if (isMatch) {
-      console.log("🧪 Birthday Match:", customer.first_name, customer.date_of_birth)
-    }
+    // ADDED: Deep debug logging for birthday filter
+    console.log("🧪 DOB Debug:", {
+      name: customer.first_name,
+      rawDOB: customer.date_of_birth,
+      parsedDOB: birth,
+      birthMonth,
+      birthDate,
+      todayMonth,
+      todayDate,
+      tomorrowMonth,
+      tomorrowDate,
+      isMatch,
+    })
 
     return isMatch
   })
