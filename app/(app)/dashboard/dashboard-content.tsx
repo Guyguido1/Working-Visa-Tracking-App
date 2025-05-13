@@ -113,7 +113,7 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     },
     {
       key: "birthdays",
-      title: "Birthdays",
+      title: "Today & Tomorrow's Birthdays",
       value: counts.birthdays,
       icon: <Cake className="w-5 h-5" />,
       color: "bg-pink-500 text-white",

@@ -26,7 +26,8 @@ All notable changes to this project are documented here.
 - Silent insert failures due to missing session or `company_id`
 - Date format inconsistencies across the application
 - Calendar background color in dark mode
-- Birthday filter updated to show only today and tomorrow
+- Birthday filter completely replaced with exact day/month matching for today and tomorrow only
+- Dashboard UI updated to show "Today & Tomorrow's Birthdays" instead of generic "Birthdays" title
 
 ### Cleaned
 - Removed temporary `console.log()` and debug statements
