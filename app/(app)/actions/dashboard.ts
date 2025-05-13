@@ -173,24 +173,25 @@ const birthdays = transformedCustomers.filter((customer) => {
   const birthMonth = birth.getMonth()
   const birthDate = birth.getDate()
 
-  return (birthMonth === todayMonth && birthDate === todayDate) ||
-         (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+  // Calculate the match before returning
+  const isMatch = (birthMonth === todayMonth && birthDate === todayDate) ||
+                 (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-    // Debug log for tracing
-    console.log("🎂 DOB Check", {
-      name: customer.first_name,
-      date_of_birth: customer.date_of_birth,
-      birthMonth,
-      birthDate,
-      todayMonth,
-      todayDate,
-      tomorrowMonth,
-      tomorrowDate,
-      isMatch,
-    })
-
-    return isMatch
+  // Debug log for tracing
+  console.log("🎂 DOB Check", {
+    name: customer.first_name,
+    date_of_birth: customer.date_of_birth,
+    birthMonth,
+    birthDate,
+    todayMonth,
+    todayDate,
+    tomorrowMonth,
+    tomorrowDate,
+    isMatch,
   })
+
+  return isMatch
+})
 
   const visaReportNotDue = transformedCustomers.filter(
     (customer) =>
