@@ -128,6 +128,15 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
     return customer
   })
 
+  // ADDED: Debug log to print all customer birthdates
+  console.log(
+    "🧪 ALL DOBs:",
+    transformedCustomers.map((c) => ({
+      name: c.first_name,
+      dob: c.date_of_birth,
+    })),
+  )
+
   // Current date for comparisons
   const currentDate = new Date()
   const in15Days = new Date()
@@ -161,27 +170,48 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
   )
 
   // Birthday filtering logic with exact day/month matching
-  const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(today.getDate() + 1)
+const today = new Date()
+const tomorrow = new Date()
+tomorrow.setDate(today.getDate() + 1)
 
-  const todayMonth = today.getMonth()
-  const todayDate = today.getDate()
+const todayMonth = today.getMonth()
+const todayDate = today.getDate()
 
-  const tomorrowMonth = tomorrow.getMonth()
-  const tomorrowDate = tomorrow.getDate()
+const tomorrowMonth = tomorrow.getMonth()
+const tomorrowDate = tomorrow.getDate()
 
-  const birthdays = transformedCustomers.filter((customer) => {
-    if (!customer.date_of_birth) return false
+const birthdays = transformedCustomers.filter((customer) => {
+  if (!customer.date_of_birth) return false
 
-    const birth = new Date(customer.date_of_birth)
-    const birthMonth = birth.getMonth()
-    const birthDate = birth.getDate()
+  const birth = new Date(customer.date_of_birth)
+  const birthMonth = birth.getMonth()
+  const birthDate = birth.getDate()
+
+  return (
+    (birthMonth === todayMonth && birthDate === todayDate) ||
+    (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+  )
+})
+
 
     // Debug logging to see which customers are being included
     const isMatch =
       (birthMonth === todayMonth && birthDate === todayDate) ||
       (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+
+    // ADDED: Deep debug logging for birthday filter
+    console.log("🧪 DOB Debug:", {
+      name: customer.first_name,
+      rawDOB: customer.date_of_birth,
+      parsedDOB: birth,
+      birthMonth,
+      birthDate,
+      todayMonth,
+      todayDate,
+      tomorrowMonth,
+      tomorrowDate,
+      isMatch,
+    })
 
     return isMatch
   })
@@ -194,25 +224,21 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       !passportExpiring30Days.some((c) => c.id === customer.id),
   )
 
-  // ADDED: Debug log to confirm the final filtered birthdays count
-  console.log("✅ Final filtered birthdays count:", birthdays.length)
-
   return {
-    counts: {
-      totalCustomers: transformedCustomers.length,
-      visaReportNotDue: visaReportNotDue.length,
-      reportsDue15Days: reportsDue15Days.length,
-      visaExpiring30Days: visaExpiring30Days.length,
-      passportExpiring30Days: passportExpiring30Days.length,
-      birthdays: birthdays.length,
-    },
-    categories: {
-      allCustomers: transformedCustomers,
-      visaReportNotDue,
-      reportsDue15Days,
-      visaExpiring30Days,
-      passportExpiring30Days,
-      birthdays, // Ensuring this is the filtered birthdays array
-    },
-  }
+  counts: {
+    totalCustomers: transformedCustomers.length,
+    visaReportNotDue: visaReportNotDue.length,
+    reportsDue15Days: reportsDue15Days.length,
+    visaExpiring30Days: visaExpiring30Days.length,
+    passportExpiring30Days: passportExpiring30Days.length,
+    birthdays: birthdays.length,
+  },
+  categories: {
+    allCustomers: transformedCustomers,
+    visaReportNotDue,
+    reportsDue15Days,
+    visaExpiring30Days,
+    passportExpiring30Days,
+    birthdays, // ✅ returns the correct filtered array (today or tomorrow)
+  },
 }
