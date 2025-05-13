@@ -1,3 +1,5 @@
+// ✅ Clean and correct getDashboardStats function for birthday filtering logic
+
 "use server"
 
 import { sql } from "@/lib/db"
@@ -55,7 +57,6 @@ export type DashboardData = {
   }
 }
 
-// Helper
 function ensureDateString(date: Date | string | null | undefined): string | null {
   if (!date) return null
   if (date instanceof Date) {
@@ -64,7 +65,6 @@ function ensureDateString(date: Date | string | null | undefined): string | null
   return String(date)
 }
 
-// Main function
 export async function getDashboardStats(tenantId: number): Promise<DashboardData | { success: false; name: string }> {
   if (!tenantId || typeof tenantId !== "number") {
     return { success: false, name: "Missing company ID" }
@@ -126,14 +126,6 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
     return customer
   })
 
-  console.log(
-    "🧪 ALL DOBs:",
-    transformedCustomers.map((c) => ({
-      name: c.first_name,
-      dob: c.date_of_birth,
-    }))
-  )
-
   const currentDate = new Date()
   const in15Days = new Date()
   in15Days.setDate(currentDate.getDate() + 15)
@@ -164,42 +156,42 @@ export async function getDashboardStats(tenantId: number): Promise<DashboardData
       new Date(customer.passport_expiry_date) >= currentDate
   )
 
- // // Birthday filtering logic with exact month & day matching
-const today = new Date()
-const tomorrow = new Date()
-tomorrow.setDate(today.getDate() + 1)
+  // ✅ Birthday filtering logic (exact match day & month)
+  const today = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(today.getDate() + 1)
 
-const todayMonth = today.getMonth()
-const todayDate = today.getDate()
-const tomorrowMonth = tomorrow.getMonth()
-const tomorrowDate = tomorrow.getDate()
+  const todayMonth = today.getMonth()
+  const todayDate = today.getDate()
+  const tomorrowMonth = tomorrow.getMonth()
+  const tomorrowDate = tomorrow.getDate()
 
-const birthdays = transformedCustomers.filter((customer) => {
-  if (!customer.date_of_birth) return false
+  const birthdays = transformedCustomers.filter((customer) => {
+    if (!customer.date_of_birth) return false
 
-  const birth = new Date(customer.date_of_birth)
-  const birthMonth = birth.getMonth()
-  const birthDate = birth.getDate()
+    const birth = new Date(customer.date_of_birth)
+    const birthMonth = birth.getMonth()
+    const birthDate = birth.getDate()
 
-  const isMatch =
-    (birthMonth === todayMonth && birthDate === todayDate) ||
-    (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
+    const isMatch =
+      (birthMonth === todayMonth && birthDate === todayDate) ||
+      (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
 
-  // Deep debug log to track logic
-  console.log("\ud83c\udf7a DOB Check", {
-    name: customer.first_name,
-    date_of_birth: customer.date_of_birth,
-    birthMonth,
-    birthDate,
-    todayMonth,
-    todayDate,
-    tomorrowMonth,
-    tomorrowDate,
-    isMatch,
+    // Debug log for tracing
+    console.log("🎂 DOB Check", {
+      name: customer.first_name,
+      date_of_birth: customer.date_of_birth,
+      birthMonth,
+      birthDate,
+      todayMonth,
+      todayDate,
+      tomorrowMonth,
+      tomorrowDate,
+      isMatch,
+    })
+
+    return isMatch
   })
-
-  return isMatch
-})
 
   const visaReportNotDue = transformedCustomers.filter(
     (customer) =>
