@@ -73,23 +73,26 @@ export async function getDashboardStats(companyId: number) {
   `,
   )
 
-  // Get count of customers with birthdays in the next 30 days
-  const birthdaysCount = await safeQuery(
-    () => sql`
-    SELECT COUNT(*) as count FROM customers
-    WHERE company_id = ${companyId}
-    AND 
+  // Get count of customers with birthdays today or tomorrow
+const birthdaysCount = await safeQuery(
+  () => sql`
+  SELECT COUNT(*) as count FROM customers
+  WHERE company_id = ${companyId}
+  AND (
+    -- Today's birthdays
     (
       EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) AND
-      EXTRACT(DAY FROM date_of_birth) >= EXTRACT(DAY FROM CURRENT_DATE)
+      EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM CURRENT_DATE)
     )
     OR
+    -- Tomorrow's birthdays
     (
-      EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) + 1 AND
-      EXTRACT(DAY FROM date_of_birth) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '30 days')
+      EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM (CURRENT_DATE + INTERVAL '1 day')) AND
+      EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM (CURRENT_DATE + INTERVAL '1 day'))
     )
-  `,
   )
+  `,
+)
 
   return {
     totalCustomers: Number.parseInt(totalCustomers[0].count),
