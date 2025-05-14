@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard } from "lucide-react"
+import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard, Globe } from "lucide-react"
 import Link from "next/link"
 
 export function SplashPage() {
@@ -42,7 +42,7 @@ export function SplashPage() {
       {/* Features Sections in Two Columns */}
       <div className="flex flex-col md:flex-row">
         {/* How It Works Section */}
-        <section className="bg-white py-16 w-full md:w-1/2">
+        <section className="bg-blue-50 py-16 w-full md:w-1/2">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">How It Works</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -70,7 +70,7 @@ export function SplashPage() {
               ].map((item, index) => (
                 <div key={index} className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-start">
-                    <div className="mr-3 mt-1">{item.icon}</div>
+                    <div className="bg-blue-100 p-3 rounded-full mr-3">{item.icon}</div>
                     <div>
                       <h3 className="text-lg font-semibold mb-1 text-gray-900">{item.title}</h3>
                       <p className="text-gray-600 text-sm">{item.description}</p>
@@ -86,30 +86,37 @@ export function SplashPage() {
         <section className="py-16 w-full md:w-1/2 bg-blue-50">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Why VisaPilot</h2>
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 {
-                  icon: <Users className="w-8 h-8 text-blue-600" />,
+                  icon: <Users className="w-10 h-10 text-blue-600" />,
                   title: "Built for visa agencies",
                   description:
                     "Designed specifically for the unique needs of visa consultants and immigration agencies",
                 },
                 {
-                  icon: <Shield className="w-8 h-8 text-blue-600" />,
+                  icon: <Shield className="w-10 h-10 text-blue-600" />,
                   title: "Secure and multi-tenant",
                   description: "Keep your client data safe with our secure, isolated multi-tenant architecture",
                 },
                 {
-                  icon: <LayoutDashboard className="w-8 h-8 text-blue-600" />,
+                  icon: <LayoutDashboard className="w-10 h-10 text-blue-600" />,
                   title: "Designed for daily use",
                   description: "Intuitive interface that makes managing visa clients efficient and stress-free",
                 },
+                {
+                  icon: <Globe className="w-10 h-10 text-blue-600" />,
+                  title: "Global compliance",
+                  description: "Stay compliant with visa regulations and requirements across different countries",
+                },
               ].map((item, index) => (
-                <div key={index} className="flex items-start p-4 rounded-lg bg-white">
-                  <div className="bg-blue-100 p-3 rounded-full mr-4">{item.icon}</div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1 text-gray-900">{item.title}</h3>
-                    <p className="text-gray-600 text-sm">{item.description}</p>
+                <div key={index} className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="bg-blue-100 p-3 rounded-full mr-3">{item.icon}</div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-1 text-gray-900">{item.title}</h3>
+                      <p className="text-gray-600 text-sm">{item.description}</p>
+                    </div>
                   </div>
                 </div>
               ))}
