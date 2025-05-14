@@ -85,10 +85,6 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     return <div className="p-4 bg-red-50 rounded-lg">Error loading dashboard: {categories.name}</div>
   }
 
-  // Add debug logging for categories
-  console.log("🧪 Active category:", activeCategory)
-  console.log("🧪 Customers shown in UI:", getActiveCustomers())
-
   const statCards = [
     {
       key: "allCustomers",
@@ -164,10 +160,7 @@ export default function DashboardContent({ counts, categories }: DashboardConten
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4">{getCategoryTitle()} List</h2>
 
-        {/* Debug label */}
-        <p className="text-sm text-gray-500 mb-2">
-          Debug: showing {getActiveCustomers().length} customers for category "{activeCategory}"
-        </p>
+        <p className="text-sm text-gray-500 mb-2">Showing {getActiveCustomers().length} customers</p>
 
         <div className="card bg-base-200 shadow-xl">
           <div className="card-body">
