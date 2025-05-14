@@ -51,3 +51,8 @@ export async function getSessionUser() {
   const session = await getSession()
   return session
 }
+
+export async function getCompanyIdFromSession(): Promise<number | null> {
+  const session = await getSession()
+  return session?.company_id || null
+}

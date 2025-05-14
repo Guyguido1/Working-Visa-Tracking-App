@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.0] – 2025-05-14
+### Added
+- Session management improvements:
+  - Changed session expiry from 7 days to 12 hours to align with office hours
+    - Implemented database structure for session management
+  - Added foundation for single session per user functionality
+
+### Changed
+- Login process now creates sessions with 12-hour expiry instead of 7 days
+- Session cookie now expires after 12 hours to match database session expiry
+
 ## [1.0.0] – 2025-05-13
 ### Added
 - Company and admin user registration flow

@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import { Search, Edit } from "lucide-react"
+import { Search, Edit, Download } from "lucide-react"
 import type { CustomerWithReport } from "../../actions/dashboard"
 import { format } from "date-fns"
+import { exportCustomers } from "./export-action"
 
 type CustomerManagementProps = {
   customers: CustomerWithReport[]
@@ -49,6 +50,35 @@ export default function CustomerManagement({ customers }: CustomerManagementProp
     }
   }
 
+  const handleExport = async () => {
+    try {
+      const result = await exportCustomers()
+
+      if (result.success && result.csvContent) {
+        // Create a Blob with the CSV content
+        const blob = new Blob([result.csvContent], { type: "text/csv;charset=utf-8;" })
+
+        // Create a download link and trigger the download
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.setAttribute("download", result.filename || "customers-export.csv")
+        document.body.appendChild(link)
+        link.click()
+
+        // Clean up
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      } else {
+        console.error("Export failed:", result.error)
+        alert("Failed to export customers. Please try again.")
+      }
+    } catch (error) {
+      console.error("Export error:", error)
+      alert("An error occurred during export. Please try again.")
+    }
+  }
+
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold mb-8">Customer Management</h1>
@@ -71,6 +101,14 @@ export default function CustomerManagement({ customers }: CustomerManagementProp
           <p className="text-sm text-gray-500 mt-2">
             Showing {filteredCustomers.length} of {customers.length} customers
           </p>
+          <button
+            onClick={handleExport}
+            className="btn btn-primary btn-sm absolute top-4 right-4 flex items-center gap-2"
+            title="Export Customers"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
         </div>
       </div>
 
