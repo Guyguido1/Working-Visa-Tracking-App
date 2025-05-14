@@ -174,29 +174,7 @@ export default async function CustomerDetails({ params }: { params: { id: string
               {report ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <p className="text-sm text-gray-500">Report Title</p>
-                    <p className="font-medium">{report.title}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Report Status</p>
-                    <p className="font-medium">
-                      <span
-                        className={`badge ${
-                          report.status === "completed"
-                            ? "badge-success"
-                            : report.status === "pending"
-                              ? "badge-warning"
-                              : "badge-info"
-                        }`}
-                      >
-                        {report.status}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Due Date</p>
+                    <p className="text-sm text-gray-500">Next Report Date</p>
                     <p className="font-medium">{formatDate(report.due_date)}</p>
                   </div>
 

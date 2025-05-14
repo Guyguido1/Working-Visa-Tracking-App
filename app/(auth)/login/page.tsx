@@ -10,7 +10,7 @@ export default function LoginPage() {
           Manage Your Visa Clients with Clarity & Confidence
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          A secure, all-in-one platform for visa agencies to track customer
+          A secure, all-in-one platform for visa agencies to track customers
         </p>
       </div>
 
