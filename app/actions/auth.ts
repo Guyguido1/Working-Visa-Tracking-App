@@ -19,6 +19,6 @@ export async function logout() {
   // Clear the session cookie
   cookies().delete("session_id")
 
-  // Redirect to login page
-  redirect("/login")
+  // Redirect to splash page instead of login page
+  redirect("/")
 }
