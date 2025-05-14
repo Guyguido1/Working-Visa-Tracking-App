@@ -1,6 +1,9 @@
-import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard } from "lucide-react"
+"use client"
 
-export default function SplashPage() {
+import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard } from "lucide-react"
+import Link from "next/link"
+
+export function SplashPage() {
   return (
     <div className="min-h-screen bg-blue-50 text-gray-900">
       {/* Navigation */}
@@ -21,12 +24,18 @@ export default function SplashPage() {
           A secure, all-in-one platform for visa agencies to track customer statuses, reports, and expirations.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <button className="px-8 py-3 rounded-md bg-blue-600 text-white font-medium text-lg hover:opacity-90 transition-opacity">
+          <Link
+            href="/login"
+            className="px-8 py-3 rounded-md bg-blue-600 text-white font-medium text-lg hover:opacity-90 transition-opacity"
+          >
             Login
-          </button>
-          <button className="px-8 py-3 rounded-md bg-white text-blue-600 border-blue-200 font-medium text-lg border hover:opacity-90 transition-opacity">
+          </Link>
+          <Link
+            href="/register"
+            className="px-8 py-3 rounded-md bg-white text-blue-600 border-blue-200 font-medium text-lg border hover:opacity-90 transition-opacity"
+          >
             Register
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -113,9 +122,12 @@ export default function SplashPage() {
       <section className="bg-blue-600 py-10">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to streamline your visa management?</h2>
-          <button className="px-8 py-3 rounded-md bg-white text-blue-600 font-medium text-lg hover:opacity-90 transition-opacity">
+          <Link
+            href="/register"
+            className="px-8 py-3 rounded-md bg-white text-blue-600 font-medium text-lg hover:opacity-90 transition-opacity"
+          >
             Get Started Today
-          </button>
+          </Link>
         </div>
       </section>
 
