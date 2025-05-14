@@ -58,7 +58,8 @@ export async function loginUser(prevState: any, formData: FormData) {
     // Create session
     const sessionId = crypto.randomUUID()
     const sessionToken = crypto.randomUUID() // Generate a session token
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    // Changed from 7 days to 12 hours
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
 
     // Store session in database with all required fields
     await sql`
