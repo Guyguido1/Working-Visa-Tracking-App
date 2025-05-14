@@ -8,16 +8,22 @@ export function middleware(request: NextRequest) {
   // Define public paths that don't require authentication
   const publicPaths = ["/login", "/register", "/"]
 
+  // Define auth paths that should redirect to dashboard when session exists
+  const authPaths = ["/login", "/register"]
+
   // Check if the path is public
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
+
+  // Check if the path is an auth path (login/register)
+  const isAuthPath = authPaths.some((path) => pathname === path)
 
   // If the path is not public and there's no session, redirect to login
   if (!isPublicPath && !sessionId) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  // If the path is public and there's a session, redirect to dashboard
-  if (isPublicPath && sessionId) {
+  // If the path is an auth path (login/register) and there's a session, redirect to dashboard
+  if (isAuthPath && sessionId) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
