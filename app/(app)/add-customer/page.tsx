@@ -457,10 +457,20 @@ export default function AddCustomer() {
                   className={`select select-bordered w-full ${errors.visaType ? "select-error" : ""}`}
                 >
                   <option value="">Select visa type</option>
-                  <option value="Tourist">Tourist</option>
-                  <option value="Business">Business</option>
-                  <option value="Work">Work</option>
-                  <option value="Education">Education</option>
+                  <option value="Tourist Visa (TR)">Tourist Visa (TR)</option>
+                  <option value="Non-Immigrant Visa – B (Work)">Non-Immigrant Visa – B (Work)</option>
+                  <option value="Non-Immigrant Visa – ED (Education)">Non-Immigrant Visa – ED (Education)</option>
+                  <option value="Non-Immigrant Visa – O (Family)">Non-Immigrant Visa – O (Family)</option>
+                  <option value="Non-Immigrant Visa – O-A (Retirement)">Non-Immigrant Visa – O-A (Retirement)</option>
+                  <option value="Non-Immigrant Visa – O (Marriage)">Non-Immigrant Visa – O (Marriage)</option>
+                  <option value="Official Visa">Official Visa</option>
+                  <option value="Long-Term Resident (LTR) Visa">Long-Term Resident (LTR) Visa</option>
+                  <option value="Destination Thailand Visa (DTV)">Destination Thailand Visa (DTV)</option>
+                  <option value="Thailand Privilege Visa">Thailand Privilege Visa</option>
+                  <option value="Smart Visa">Smart Visa</option>
+                  <option value="Investment Visa">Investment Visa</option>
+                  <option value="Volunteer Visa">Volunteer Visa</option>
+                  <option value="Retirement Extension">Retirement Extension</option>
                 </select>
                 {errors.visaType && (
                   <label className="label">
