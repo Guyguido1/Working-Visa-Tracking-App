@@ -146,3 +146,43 @@ export async function deleteUser(userId: number) {
     return { success: false, error: "Failed to delete user" }
   }
 }
+
+export async function updateUserPassword(userId: number, newPassword: string) {
+  try {
+    // Get the user's session to access their company_id
+    const session = await getSession()
+    if (!session) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Check if the current user is an admin
+    if (!session.is_admin) {
+      return { success: false, error: "Only admins can update user passwords" }
+    }
+
+    // Verify the user belongs to the same company
+    const userCheck = await sql`
+      SELECT id FROM users 
+      WHERE id = ${userId} AND company_id = ${session.company_id}
+    `
+
+    if (userCheck.length === 0) {
+      return { success: false, error: "User not found or access denied" }
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcryptjs.hash(newPassword, 10)
+
+    // Update the user's password
+    await sql`
+      UPDATE users 
+      SET password_hash = ${hashedPassword}, updated_at = NOW()
+      WHERE id = ${userId}
+    `
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating user password:", error)
+    return { success: false, error: "Failed to update password" }
+  }
+}

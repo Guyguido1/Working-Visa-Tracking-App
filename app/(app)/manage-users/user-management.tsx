@@ -5,6 +5,7 @@ import { fetchUsers, deleteUser } from "./actions"
 import AddUserForm from "./add-user-form"
 import DeleteUserModal from "./delete-user-modal"
 import { getSession } from "@/app/actions/session"
+import EditUserModal from "./edit-user-modal"
 
 export default function UserManagement({ currentUser }) {
   const [users, setUsers] = useState([])
@@ -14,6 +15,7 @@ export default function UserManagement({ currentUser }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [companyName, setCompanyName] = useState("")
+  const [userToEdit, setUserToEdit] = useState(null)
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -71,6 +73,20 @@ export default function UserManagement({ currentUser }) {
     setUserToDelete(null)
   }
 
+  const handleEditClick = (user) => {
+    setUserToEdit(user)
+  }
+
+  const handleEditConfirm = () => {
+    setUserToEdit(null)
+    // Optionally refresh the user list
+    setRefreshTrigger((prev) => prev + 1)
+  }
+
+  const handleEditCancel = () => {
+    setUserToEdit(null)
+  }
+
   if (loading) {
     return <div className="text-center py-8">Loading users...</div>
   }
@@ -118,6 +134,9 @@ export default function UserManagement({ currentUser }) {
                   <td>{user.is_admin ? "Yes" : "No"}</td>
                   <td>
                     <div className="flex space-x-2">
+                      <button className="btn btn-primary btn-sm" onClick={() => handleEditClick(user)}>
+                        Edit
+                      </button>
                       {user.id !== currentUser.id && (
                         <button className="btn btn-error btn-sm" onClick={() => handleDeleteClick(user)}>
                           Delete
@@ -137,6 +156,7 @@ export default function UserManagement({ currentUser }) {
       {userToDelete && (
         <DeleteUserModal user={userToDelete} onConfirm={handleDeleteConfirm} onCancel={handleDeleteCancel} />
       )}
+      {userToEdit && <EditUserModal user={userToEdit} onConfirm={handleEditConfirm} onCancel={handleEditCancel} />}
     </div>
   )
 }
