@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { ArrowLeft, Edit, Calendar, User, Globe, FileText, RefreshCw } from "lucide-react"
 import { getCustomerDetailsWithReport } from "./get-customer-details"
+import { getReportNotes } from "./report-notes-actions"
 import NotesSection from "./notes-section"
 import FileUpload from "./file-upload"
 import DeleteCustomerModal from "./delete-modal"
 import StatusButton from "./status-button"
-import ReportNote from "./report-note"
+import ReportNoteHistory from "./report-note-history"
 
 // Helper function to format dates
 function formatDate(dateString: string | null | undefined): string {
@@ -53,6 +54,15 @@ export default async function CustomerDetails({ params }: { params: { id: string
 
   const { customer, report, notes = [], files = [] } = result.data
   const customerName = `${customer.first_name} ${customer.last_name}`
+
+  // Fetch report notes if a report exists
+  let reportNotes = []
+  if (report) {
+    const notesResult = await getReportNotes(report.id, customerId)
+    if (notesResult.success && notesResult.notes) {
+      reportNotes = notesResult.notes
+    }
+  }
 
   return (
     <div className="w-full">
@@ -200,15 +210,8 @@ export default async function CustomerDetails({ params }: { params: { id: string
                     </div>
                   </div>
 
-                  {/* Note input replaces the description field */}
-                  {/* Fix: Pass the current status to the ReportNote component */}
-                  <ReportNote
-                    customerId={customerId}
-                    reportId={report.id}
-                    initialNote={report.note}
-                    lastUpdated={report.status_updated_at}
-                    currentStatus={report.status || "pending"} // Pass the current status with a fallback
-                  />
+                  {/* Replace the single note with note history */}
+                  <ReportNoteHistory reportId={report.id} customerId={customerId} notes={reportNotes} />
                 </div>
               ) : (
                 <p className="text-gray-500 italic">No reporting requirements</p>
