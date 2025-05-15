@@ -28,16 +28,12 @@ export async function addReportNote(
       return { success: false, error: "Unauthorized - No session found" }
     }
 
-    console.log("Session:", JSON.stringify(session))
+    console.log("Session structure:", Object.keys(session))
 
-    // Fix: Check if session has the expected structure
-    if (!session.user || !session.user.id) {
-      console.log("Invalid session structure:", session)
-      return { success: false, error: "Unauthorized - Invalid session structure" }
-    }
-
-    const userId = session.user.id
-    const companyId = session.user.company_id
+    // Fix: Use the correct session structure
+    // The session object has direct properties, not nested under 'user'
+    const userId = session.user_id // Changed from session.user.id
+    const companyId = session.company_id // Changed from session.user.company_id
 
     console.log(`User ID: ${userId}, Company ID: ${companyId}`)
 
@@ -145,13 +141,8 @@ export async function getReportNotes(
       return { success: false, error: "Unauthorized" }
     }
 
-    // Fix: Check if session has the expected structure
-    if (!session.user || !session.user.company_id) {
-      console.log("Invalid session structure:", session)
-      return { success: false, error: "Unauthorized - Invalid session structure" }
-    }
-
-    const companyId = session.user.company_id
+    // Fix: Use the correct session structure
+    const companyId = session.company_id // Changed from session.user.company_id
 
     // Verify the customer belongs to the user's company
     const customerCheck = await sql`
@@ -193,9 +184,10 @@ export async function getReportNotes(
     */
 
     // Get the notes with user information
+    // Fix: Update the user name concatenation to handle potential null values
     const notes = await sql`
       SELECT rn.id, rn.report_id, rn.content, rn.user_id, 
-             u.first_name || ' ' || u.last_name as user_name,
+             COALESCE(u.name, u.email) as user_name,
              rn.created_at
       FROM report_notes rn
       JOIN users u ON rn.user_id = u.id
