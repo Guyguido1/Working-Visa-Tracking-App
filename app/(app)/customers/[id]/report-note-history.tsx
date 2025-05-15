@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import type { ReportNote } from "./report-notes-actions"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, User } from "lucide-react"
+import { Clock, User, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface ReportNoteHistoryProps {
   reportId: number
@@ -27,18 +28,21 @@ export default function ReportNoteHistory({ reportId, customerId, notes = [] }: 
     setError(null)
 
     try {
+      console.log(`Submitting note for report ${reportId}, customer ${customerId}`)
       const result = await addReportNote(reportId, customerId, newNote)
 
       if (result.success) {
+        console.log("Note added successfully")
         setNewNote("")
         // Refresh the page to show the new note
         router.refresh()
       } else {
+        console.error("Failed to add note:", result.error)
         setError(result.error || "Failed to add note")
       }
     } catch (err) {
-      setError("An unexpected error occurred")
-      console.error(err)
+      console.error("Error in handleSubmit:", err)
+      setError(`An unexpected error occurred: ${err.message}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -68,7 +72,12 @@ export default function ReportNoteHistory({ reportId, customerId, notes = [] }: 
           className="min-h-[100px] w-full text-foreground dark:text-white"
         />
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Button onClick={handleSubmit} disabled={isSubmitting || !newNote.trim()} className="w-full">
           {isSubmitting ? "Adding Note..." : "Add Note"}
