@@ -196,6 +196,84 @@ export async function getReportNotes(
   }
 }
 
+// New function to delete a report note
+export async function deleteReportNote(
+  noteId: number,
+  reportId: number,
+  customerId: number,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Get the user's session to access their user_id and company_id
+    const session = await getSession()
+    if (!session) {
+      return { success: false, error: "Unauthorized - No session found" }
+    }
+
+    const userId = session.user_id
+    const companyId = session.company_id
+
+    // Verify the customer belongs to the user's company
+    const customerCheck = await sql`
+      SELECT id FROM customers 
+      WHERE id = ${customerId} AND company_id = ${companyId}
+    `
+
+    if (customerCheck.length === 0) {
+      return { success: false, error: "Customer not found or access denied" }
+    }
+
+    // Verify the report belongs to the customer
+    const reportCheck = await sql`
+      SELECT r.id FROM reports r
+      JOIN customers c ON r.customer_id = c.id
+      WHERE r.id = ${reportId} 
+      AND c.id = ${customerId}
+      AND c.company_id = ${companyId}
+    `
+
+    if (reportCheck.length === 0) {
+      return { success: false, error: "Report not found or access denied" }
+    }
+
+    // Verify the note exists and belongs to the report
+    const noteCheck = await sql`
+      SELECT id, user_id FROM report_notes
+      WHERE id = ${noteId} AND report_id = ${reportId}
+    `
+
+    if (noteCheck.length === 0) {
+      return { success: false, error: "Note not found" }
+    }
+
+    // Optional: Check if the user is the owner of the note or an admin
+    // This is a policy decision - you might want to allow only the creator to delete their notes
+    // or allow any user in the company to delete any note
+    const note = noteCheck[0]
+
+    // Uncomment this if you want to restrict deletion to the note creator
+    /*
+    if (note.user_id !== userId) {
+      return { success: false, error: "You can only delete your own notes" }
+    }
+    */
+
+    // Delete the note
+    await sql`
+      DELETE FROM report_notes
+      WHERE id = ${noteId}
+    `
+
+    // Revalidate the pages to reflect the deletion
+    revalidatePath(`/customers/${customerId}`)
+    revalidatePath("/dashboard")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting report note:", error)
+    return { success: false, error: `Failed to delete note: ${error.message}` }
+  }
+}
+
 // New function to get the last note for a report
 export async function getLastReportNote(
   reportId: number,
