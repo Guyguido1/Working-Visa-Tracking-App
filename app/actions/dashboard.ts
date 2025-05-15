@@ -30,6 +30,7 @@ export type Report = {
   due_date: string
   status: string
   note?: string | null
+  latest_note?: string | null // Add this field for the latest note
   status_updated_at?: string | null
   created_at: string
   updated_at: string
@@ -83,8 +84,15 @@ export async function getDashboardStats(tenantId?: number): Promise<DashboardDat
       return { success: false, name: "Invalid company ID" }
     }
 
-    // Get customers with their most recent report
+    // Get customers with their most recent report and latest note
     const customersWithReports = await sql`
+      WITH latest_notes AS (
+        SELECT 
+          report_id,
+          content as latest_note_content,
+          ROW_NUMBER() OVER (PARTITION BY report_id ORDER BY created_at DESC) as rn
+        FROM report_notes
+      )
       SELECT 
         c.*,
         r.id as report_id,
@@ -93,6 +101,7 @@ export async function getDashboardStats(tenantId?: number): Promise<DashboardDat
         r.due_date as report_due_date,
         r.status as report_status,
         r.note as report_note,
+        ln.latest_note_content as report_latest_note,
         r.status_updated_at as report_status_updated_at,
         r.created_at as report_created_at,
         r.updated_at as report_updated_at
@@ -103,6 +112,7 @@ export async function getDashboardStats(tenantId?: number): Promise<DashboardDat
         FROM reports
         ORDER BY customer_id, due_date DESC
       ) r ON c.id = r.customer_id
+      LEFT JOIN latest_notes ln ON r.id = ln.report_id AND ln.rn = 1
       WHERE 
         c.company_id = ${companyId}
     `
@@ -135,6 +145,7 @@ export async function getDashboardStats(tenantId?: number): Promise<DashboardDat
           due_date: ensureDateString(row.report_due_date) || "",
           status: row.report_status,
           note: row.report_note,
+          latest_note: row.report_latest_note, // Add the latest note
           status_updated_at: ensureDateString(row.report_status_updated_at),
           created_at: ensureDateString(row.report_created_at) || "",
           updated_at: ensureDateString(row.report_updated_at) || "",
@@ -240,6 +251,13 @@ export async function getReportsDueIn15Days(): Promise<{ success: boolean; repor
     }
 
     const reports = await sql`
+      WITH latest_notes AS (
+        SELECT 
+          report_id,
+          content as latest_note_content,
+          ROW_NUMBER() OVER (PARTITION BY report_id ORDER BY created_at DESC) as rn
+        FROM report_notes
+      )
       SELECT 
         r.id, 
         r.customer_id, 
@@ -247,12 +265,14 @@ export async function getReportsDueIn15Days(): Promise<{ success: boolean; repor
         r.due_date, 
         r.status, 
         r.note, 
+        ln.latest_note_content,
         r.status_updated_at,
         c.first_name,
         c.last_name,
         c.email
       FROM reports r
       JOIN customers c ON r.customer_id = c.id
+      LEFT JOIN latest_notes ln ON r.id = ln.report_id AND ln.rn = 1
       WHERE c.company_id = ${session.company_id}
       AND r.due_date <= (CURRENT_DATE + INTERVAL '15 days')
       AND r.due_date >= CURRENT_DATE
@@ -268,6 +288,7 @@ export async function getReportsDueIn15Days(): Promise<{ success: boolean; repor
         due_date: ensureDateString(report.due_date),
         status: report.status,
         note: report.note,
+        latest_note: report.latest_note_content,
         status_updated_at: ensureDateString(report.status_updated_at),
         customer_name: `${report.first_name} ${report.last_name}`,
         customer_email: report.email,

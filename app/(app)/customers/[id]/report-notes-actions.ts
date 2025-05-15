@@ -119,9 +119,10 @@ export async function addReportNote(
       // Don't return error here, as the note was already added
     }
 
-    // Revalidate the page to show the new note
-    console.log("Revalidating page")
+    // Revalidate the pages to show the new note
+    console.log("Revalidating pages")
     revalidatePath(`/customers/${customerId}`)
+    revalidatePath("/dashboard") // Add this to revalidate the dashboard
 
     return { success: true }
   } catch (error) {

@@ -152,6 +152,14 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     return dueDate <= in15Days && dueDate >= today
   }
 
+  // Get the note to display - prioritize latest_note over note
+  const getDisplayNote = (customer: CustomerWithReport) => {
+    if (customer.report?.latest_note) {
+      return customer.report.latest_note
+    }
+    return customer.report?.note || ""
+  }
+
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -216,11 +224,11 @@ export default function DashboardContent({ counts, categories }: DashboardConten
                         <td>{formatDate(customer.report?.due_date)}</td>
                         {activeCategory === "reportsDue15Days" && (
                           <td>
-                            {customer.report?.note ? (
-                              <span className="text-xs text-gray-500 cursor-help" title={customer.report.note}>
-                                {customer.report.note.length > 20
-                                  ? `${customer.report.note.substring(0, 20)}...`
-                                  : customer.report.note}
+                            {getDisplayNote(customer) ? (
+                              <span className="text-xs text-gray-500 cursor-help" title={getDisplayNote(customer)}>
+                                {getDisplayNote(customer).length > 20
+                                  ? `${getDisplayNote(customer).substring(0, 20)}...`
+                                  : getDisplayNote(customer)}
                               </span>
                             ) : (
                               <span className="text-xs text-gray-400">No notes</span>
