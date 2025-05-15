@@ -9,20 +9,22 @@ type ReportNoteProps = {
   reportId: number
   initialNote: string | null
   lastUpdated: string | null
-  currentStatus: string // Add this to track the current status
+  currentStatus: string
 }
 
-export default function ReportNote({
-  customerId,
-  reportId,
-  initialNote,
-  lastUpdated,
-  currentStatus, // Make sure to pass this from the parent component
-}: ReportNoteProps) {
+export default function ReportNote({ customerId, reportId, initialNote, lastUpdated, currentStatus }: ReportNoteProps) {
   const [note, setNote] = useState(initialNote || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(lastUpdated)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Keep track of the status locally
+  const [status, setStatus] = useState(currentStatus)
+
+  // Update local status when prop changes
+  useEffect(() => {
+    setStatus(currentStatus)
+  }, [currentStatus])
 
   // Auto-resize textarea as content changes
   useEffect(() => {
@@ -37,12 +39,11 @@ export default function ReportNote({
 
     setIsSubmitting(true)
     try {
-      // Fix: Pass individual parameters instead of an object
-      // Pass the current status as the third parameter
+      // Use the current status from state
       const result = await updateCustomerReportStatus(
         reportId,
         customerId,
-        currentStatus, // Keep the current status
+        status, // Use the tracked status
         note,
       )
 

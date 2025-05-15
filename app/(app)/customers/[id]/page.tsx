@@ -201,11 +201,13 @@ export default async function CustomerDetails({ params }: { params: { id: string
                   </div>
 
                   {/* Note input replaces the description field */}
+                  {/* Fix: Pass the current status to the ReportNote component */}
                   <ReportNote
                     customerId={customerId}
                     reportId={report.id}
                     initialNote={report.note}
                     lastUpdated={report.status_updated_at}
+                    currentStatus={report.status || "pending"} // Pass the current status with a fallback
                   />
                 </div>
               ) : (
