@@ -74,25 +74,25 @@ export async function getDashboardStats(companyId: number) {
   )
 
   // Get count of customers with birthdays today or tomorrow
-const birthdaysCount = await safeQuery(
-  () => sql`
-  SELECT COUNT(*) as count FROM customers
-  WHERE company_id = ${companyId}
-  AND (
-    -- Today's birthdays
-    (
-      EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) AND
-      EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM CURRENT_DATE)
+  const birthdaysCount = await safeQuery(
+    () => sql`
+    SELECT COUNT(*) as count FROM customers
+    WHERE company_id = ${companyId}
+    AND (
+      -- Today's birthdays
+      (
+        EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) AND
+        EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM CURRENT_DATE)
+      )
+      OR
+      -- Tomorrow's birthdays
+      (
+        EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM (CURRENT_DATE + INTERVAL '1 day')) AND
+        EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM (CURRENT_DATE + INTERVAL '1 day'))
+      )
     )
-    OR
-    -- Tomorrow's birthdays
-    (
-      EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM (CURRENT_DATE + INTERVAL '1 day')) AND
-      EXTRACT(DAY FROM date_of_birth) = EXTRACT(DAY FROM (CURRENT_DATE + INTERVAL '1 day'))
-    )
+    `,
   )
-  `,
-)
 
   return {
     totalCustomers: Number.parseInt(totalCustomers[0].count),
@@ -182,14 +182,52 @@ export async function updateReport(
   data: {
     due_date: string
     status: string
+    note?: string | null
+  },
+) {
+  // Update with note if provided, otherwise just update due_date and status
+  if (data.note !== undefined) {
+    return await safeQuery(
+      () => sql`
+      UPDATE reports
+      SET 
+        due_date = ${data.due_date},
+        status = ${data.status},
+        note = ${data.note},
+        status_updated_at = NOW(),
+        updated_at = NOW()
+      WHERE id = ${id}
+    `,
+    )
+  } else {
+    return await safeQuery(
+      () => sql`
+      UPDATE reports
+      SET 
+        due_date = ${data.due_date},
+        status = ${data.status},
+        updated_at = NOW()
+      WHERE id = ${id}
+    `,
+    )
+  }
+}
+
+// New helper function to update just the report status and note
+export async function updateReportStatus(
+  id: number,
+  data: {
+    status: string
+    note?: string | null
   },
 ) {
   return await safeQuery(
     () => sql`
     UPDATE reports
     SET 
-      due_date = ${data.due_date},
       status = ${data.status},
+      note = ${data.note || null},
+      status_updated_at = NOW(),
       updated_at = NOW()
     WHERE id = ${id}
   `,
@@ -202,6 +240,7 @@ export async function createReport(
   data: {
     due_date: string
     status: string
+    note?: string | null
   },
 ) {
   return await safeQuery(
@@ -211,14 +250,18 @@ export async function createReport(
       title,
       description,
       due_date,
-      status
+      status,
+      note,
+      status_updated_at
     )
     VALUES (
       ${customerId},
       'Regular Check-in',
       'Scheduled follow-up report',
       ${data.due_date},
-      ${data.status}
+      ${data.status},
+      ${data.note || null},
+      NOW()
     )
   `,
   )
@@ -230,6 +273,53 @@ export async function deleteReport(id: number) {
     () => sql`
     DELETE FROM reports
     WHERE id = ${id}
+  `,
+  )
+}
+
+// New helper function to get report with status information
+export async function getReportWithStatus(reportId: number) {
+  return await safeQuery(
+    () => sql`
+    SELECT 
+      id, 
+      customer_id, 
+      title, 
+      description, 
+      due_date, 
+      status, 
+      note, 
+      status_updated_at, 
+      created_at, 
+      updated_at
+    FROM reports
+    WHERE id = ${reportId}
+  `,
+  )
+}
+
+// New helper function to get reports due in the next 15 days with status
+export async function getReportsDueIn15Days(companyId: number) {
+  return await safeQuery(
+    () => sql`
+    SELECT 
+      r.id, 
+      r.customer_id, 
+      r.title, 
+      r.description, 
+      r.due_date, 
+      r.status, 
+      r.note, 
+      r.status_updated_at,
+      c.first_name,
+      c.last_name,
+      c.email
+    FROM reports r
+    JOIN customers c ON r.customer_id = c.id
+    WHERE c.company_id = ${companyId}
+    AND r.due_date <= (CURRENT_DATE + INTERVAL '15 days')
+    AND r.due_date >= CURRENT_DATE
+    ORDER BY r.due_date ASC
   `,
   )
 }

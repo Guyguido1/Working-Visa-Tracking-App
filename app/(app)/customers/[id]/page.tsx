@@ -1,9 +1,11 @@
 import Link from "next/link"
 import { ArrowLeft, Edit, Calendar, User, Globe, FileText, RefreshCw } from "lucide-react"
-import { getCustomerDetails } from "./actions"
+import { getCustomerDetailsWithReport } from "./get-customer-details"
 import NotesSection from "./notes-section"
 import FileUpload from "./file-upload"
 import DeleteCustomerModal from "./delete-modal"
+import StatusButton from "./status-button"
+import ReportNote from "./report-note"
 
 // Helper function to format dates
 function formatDate(dateString: string | null | undefined): string {
@@ -17,10 +19,10 @@ function formatDate(dateString: string | null | undefined): string {
 
 export default async function CustomerDetails({ params }: { params: { id: string } }) {
   const customerId = Number.parseInt(params.id, 10)
-  const result = await getCustomerDetails(customerId)
+  const result = await getCustomerDetailsWithReport(customerId)
 
   // Handle error state
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return (
       <div className="w-full">
         <div className="flex items-center mb-8">
@@ -49,7 +51,7 @@ export default async function CustomerDetails({ params }: { params: { id: string
     )
   }
 
-  const { customer, report, notes = [], files = [] } = result
+  const { customer, report, notes = [], files = [] } = result.data
   const customerName = `${customer.first_name} ${customer.last_name}`
 
   return (
@@ -172,16 +174,39 @@ export default async function CustomerDetails({ params }: { params: { id: string
               </h2>
 
               {report ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Next Report Date</p>
-                    <p className="font-medium">{formatDate(report.due_date)}</p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Next Report Date</p>
+                      <p className="font-medium">{formatDate(report.due_date)}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gray-500">Status:</p>
+                      <div className="flex space-x-2">
+                        <StatusButton
+                          customerId={customerId}
+                          reportId={report.id}
+                          initialStatus={report.status}
+                          variant="completed"
+                        />
+                        <StatusButton
+                          customerId={customerId}
+                          reportId={report.id}
+                          initialStatus={report.status}
+                          variant="needs-attention"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <p className="text-sm text-gray-500">Description</p>
-                    <p className="font-medium">{report.description || "N/A"}</p>
-                  </div>
+                  {/* Note input replaces the description field */}
+                  <ReportNote
+                    customerId={customerId}
+                    reportId={report.id}
+                    initialNote={report.note}
+                    lastUpdated={report.status_updated_at}
+                  />
                 </div>
               ) : (
                 <p className="text-gray-500 italic">No reporting requirements</p>

@@ -6,6 +6,7 @@ import StatCard from "@/components/stat-card"
 import type { CustomerWithReport } from "../../actions/dashboard"
 import { format } from "date-fns"
 import Link from "next/link"
+import StatusIndicator from "./status-indicator"
 
 type DashboardContentProps = {
   counts: {
@@ -136,6 +137,21 @@ export default function DashboardContent({ counts, categories }: DashboardConten
     return card ? card.title : "Customers"
   }
 
+  // Check if we should show status indicators
+  const shouldShowStatusIndicator = (customer: CustomerWithReport) => {
+    // Only show status indicators for reports due within 15 days
+    if (activeCategory !== "reportsDue15Days") return false
+
+    if (!customer.report?.due_date) return false
+
+    const dueDate = new Date(customer.report.due_date)
+    const today = new Date()
+    const in15Days = new Date()
+    in15Days.setDate(today.getDate() + 15)
+
+    return dueDate <= in15Days && dueDate >= today
+  }
+
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -173,6 +189,7 @@ export default function DashboardContent({ counts, categories }: DashboardConten
                     <th>Visa Type</th>
                     <th>Visa Expiry</th>
                     <th>Report Due</th>
+                    {activeCategory === "reportsDue15Days" && <th>Status</th>}
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -181,17 +198,35 @@ export default function DashboardContent({ counts, categories }: DashboardConten
                     getActiveCustomers().map((customer) => (
                       <tr key={customer.id}>
                         <td>
-                          <Link
-                            href={`/customers/${customer.id}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                          >
-                            {customer.first_name} {customer.last_name}
-                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/customers/${customer.id}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            >
+                              {customer.first_name} {customer.last_name}
+                            </Link>
+                            {shouldShowStatusIndicator(customer) && (
+                              <StatusIndicator status={customer.report?.status || "pending"} />
+                            )}
+                          </div>
                         </td>
                         <td>{customer.email || "N/A"}</td>
                         <td>{customer.visa_type || "N/A"}</td>
                         <td>{formatDate(customer.expiry_date)}</td>
                         <td>{formatDate(customer.report?.due_date)}</td>
+                        {activeCategory === "reportsDue15Days" && (
+                          <td>
+                            {customer.report?.note ? (
+                              <span className="text-xs text-gray-500 cursor-help" title={customer.report.note}>
+                                {customer.report.note.length > 20
+                                  ? `${customer.report.note.substring(0, 20)}...`
+                                  : customer.report.note}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">No notes</span>
+                            )}
+                          </td>
+                        )}
                         <td>
                           <Link
                             href={`/edit-customer/${customer.id}`}
@@ -205,7 +240,7 @@ export default function DashboardContent({ counts, categories }: DashboardConten
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="text-center py-4">
+                      <td colSpan={activeCategory === "reportsDue15Days" ? 7 : 6} className="text-center py-4">
                         No customers in this category
                       </td>
                     </tr>
