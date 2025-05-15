@@ -59,13 +59,13 @@ export default function ReportNoteHistory({ reportId, customerId, notes = [] }: 
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Report Notes History</h3>
 
-      {/* Add new note */}
+      {/* Add new note - Fix text color for dark mode */}
       <div className="space-y-2">
         <Textarea
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add a new note..."
-          className="min-h-[100px] w-full"
+          className="min-h-[100px] w-full text-foreground dark:text-white"
         />
 
         {error && <p className="text-sm text-red-500">{error}</p>}
