@@ -211,7 +211,12 @@ export default async function CustomerDetails({ params }: { params: { id: string
                   </div>
 
                   {/* Replace the single note with note history */}
-                  <ReportNoteHistory reportId={report.id} customerId={customerId} notes={reportNotes} />
+                  <ReportNoteHistory
+                    reportId={report.id}
+                    customerId={customerId}
+                    notes={reportNotes}
+                    dueDate={report.due_date}
+                  />
                 </div>
               ) : (
                 <p className="text-gray-500 italic">No reporting requirements</p>

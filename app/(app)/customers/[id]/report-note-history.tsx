@@ -13,13 +13,26 @@ interface ReportNoteHistoryProps {
   reportId: number
   customerId: number
   notes: ReportNote[]
+  dueDate?: string // Add this prop
 }
 
-export default function ReportNoteHistory({ reportId, customerId, notes = [] }: ReportNoteHistoryProps) {
+export default function ReportNoteHistory({ reportId, customerId, notes = [], dueDate }: ReportNoteHistoryProps) {
   const [newNote, setNewNote] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  // Add a function to check if the report is within the 15-day window
+  const isWithin15DayWindow = () => {
+    if (!dueDate) return false
+
+    const reportDueDate = new Date(dueDate)
+    const today = new Date()
+    const in15Days = new Date()
+    in15Days.setDate(today.getDate() + 15)
+
+    return reportDueDate <= in15Days
+  }
 
   const handleSubmit = async () => {
     if (!newNote.trim() || isSubmitting) return
@@ -63,26 +76,35 @@ export default function ReportNoteHistory({ reportId, customerId, notes = [] }: 
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Report Notes History</h3>
 
-      {/* Add new note - Fix text color for dark mode */}
-      <div className="space-y-2">
-        <Textarea
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          placeholder="Add a new note..."
-          className="min-h-[100px] w-full text-foreground dark:text-white"
-        />
+      {dueDate && !isWithin15DayWindow() ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Notes can only be added for reports due within the next 15 days or for overdue reports.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        // Add new note - Fix text color for dark mode
+        <div className="space-y-2">
+          <Textarea
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            placeholder="Add a new note..."
+            className="min-h-[100px] w-full text-foreground dark:text-white"
+          />
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        <Button onClick={handleSubmit} disabled={isSubmitting || !newNote.trim()} className="w-full">
-          {isSubmitting ? "Adding Note..." : "Add Note"}
-        </Button>
-      </div>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !newNote.trim()} className="w-full">
+            {isSubmitting ? "Adding Note..." : "Add Note"}
+          </Button>
+        </div>
+      )}
 
       {/* Notes list */}
       <div className="space-y-3 max-h-[400px] overflow-y-auto">

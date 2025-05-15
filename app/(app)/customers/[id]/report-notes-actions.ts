@@ -78,19 +78,14 @@ export async function addReportNote(
     in15Days.setDate(today.getDate() + 15)
 
     console.log(`Due date: ${dueDate}, Today: ${today}, In 15 days: ${in15Days}`)
-    console.log(`Is due date > in15Days? ${dueDate > in15Days}`)
-    console.log(`Is due date < today? ${dueDate < today}`)
 
-    // Fix: Make the 15-day window check optional for now to see if that's causing the issue
-    // We'll add it back with proper logic after confirming
-    /*
-    if (dueDate > in15Days || dueDate < today) {
+    // Only allow adding notes if the report is due within the next 15 days or is overdue
+    if (dueDate > in15Days) {
       return {
         success: false,
-        error: "Notes can only be added for reports due within the next 15 days",
+        error: "Notes can only be added for reports due within the next 15 days or for overdue reports",
       }
     }
-    */
 
     // Add the note
     console.log("Adding note to database")
@@ -175,14 +170,12 @@ export async function getReportNotes(
     const in15Days = new Date()
     in15Days.setDate(today.getDate() + 15)
 
-    // Fix: Make the 15-day window check optional for now
-    /*
-    if (dueDate > in15Days || dueDate < today) {
+    // Only show notes if the report is due within the next 15 days or is overdue
+    if (dueDate > in15Days) {
       // We don't actually delete the notes, but we return an empty array
       // This way we preserve the history but don't show it in the UI
       return { success: true, notes: [] }
     }
-    */
 
     // Get the notes with user information
     // Fix: Update the user name concatenation to handle potential null values
