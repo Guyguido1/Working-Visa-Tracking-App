@@ -30,11 +30,8 @@ export default function StatusButton({
       // If already active, we're toggling off (back to pending)
       const newStatus = isActive ? "pending" : variant === "completed" ? "completed" : "needs_attention"
 
-      const result = await updateCustomerReportStatus({
-        customerId,
-        reportId,
-        status: newStatus,
-      })
+      // Fix: Pass individual parameters instead of an object
+      const result = await updateCustomerReportStatus(reportId, customerId, newStatus)
 
       if (result.success) {
         setIsActive(!isActive)

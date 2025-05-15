@@ -9,9 +9,16 @@ type ReportNoteProps = {
   reportId: number
   initialNote: string | null
   lastUpdated: string | null
+  currentStatus: string // Add this to track the current status
 }
 
-export default function ReportNote({ customerId, reportId, initialNote, lastUpdated }: ReportNoteProps) {
+export default function ReportNote({
+  customerId,
+  reportId,
+  initialNote,
+  lastUpdated,
+  currentStatus, // Make sure to pass this from the parent component
+}: ReportNoteProps) {
   const [note, setNote] = useState(initialNote || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(lastUpdated)
@@ -30,11 +37,14 @@ export default function ReportNote({ customerId, reportId, initialNote, lastUpda
 
     setIsSubmitting(true)
     try {
-      const result = await updateCustomerReportStatus({
-        customerId,
+      // Fix: Pass individual parameters instead of an object
+      // Pass the current status as the third parameter
+      const result = await updateCustomerReportStatus(
         reportId,
+        customerId,
+        currentStatus, // Keep the current status
         note,
-      })
+      )
 
       if (result.success) {
         setLastSaved(new Date().toISOString())
