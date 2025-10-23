@@ -167,6 +167,20 @@ body {
   background-color: #ffffff !important;
 }
 
+/* Splash page exception for dark mode - keep text dark on light blue background */
+[data-theme="dark"] .splash-page,
+[data-theme="dark"] .splash-page h1,
+[data-theme="dark"] .splash-page h2,
+[data-theme="dark"] .splash-page h3,
+[data-theme="dark"] .splash-page p,
+[data-theme="dark"] .splash-page span,
+[data-theme="dark"] .splash-page div,
+[data-theme="dark"] .splash-page nav,
+[data-theme="dark"] .splash-page section,
+[data-theme="dark"] .splash-page footer {
+  color: inherit !important;
+}
+
 /* Delete note modal exception for dark mode */
 [data-theme="dark"] .delete-note-modal,
 [data-theme="dark"] .delete-note-modal h3,

@@ -5,7 +5,7 @@ import Link from "next/link"
 
 export function SplashPage() {
   return (
-    <div className="min-h-screen bg-blue-100 text-gray-900">
+    <div className="splash-page min-h-screen bg-blue-100 text-gray-900">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
