@@ -1,97 +1,65 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useActionState } from "react"
 import { useRouter } from "next/navigation"
-import { useFormState } from "react-dom"
 import { loginUser } from "./actions"
-import { AlertCircle } from "lucide-react"
-
-const initialState = {
-  errors: {},
-  message: "",
-}
+import { useEffect } from "react"
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useFormState(loginUser, initialState)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [state, formAction, isPending] = useActionState(loginUser, undefined)
 
-  // Handle redirect after successful login
   useEffect(() => {
-    if (state && state.redirectTo) {
+    if (state?.redirectTo) {
       router.push(state.redirectTo)
     }
-  }, [state, router])
-
-  const handleSubmit = (formData: FormData) => {
-    setIsSubmitting(true)
-    formAction(formData)
-  }
+  }, [state?.redirectTo, router])
 
   return (
-    <form action={handleSubmit} className="space-y-4">
-      {state.message && (
-        <div
-          className="bg-red-100 border border-red-400 px-4 py-3 rounded relative"
-          style={{ color: "#b91c1c" }}
-          role="alert"
-        >
-          <div className="flex items-center">
-            <AlertCircle className="h-4 w-4 mr-2" style={{ color: "#b91c1c" }} />
-            <span style={{ color: "#b91c1c" }}>{state.message}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <label htmlFor="email" className="block text-sm font-medium mb-1 text-white">
+    <form action={formAction} className="space-y-6">
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-white">
           Email
         </label>
         <input
           id="email"
           name="email"
           type="email"
-          autoComplete="off"
+          autoComplete="email"
           required
-          defaultValue=""
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
+          className="mt-1 block w-full px-5 py-2 border border-blue-800 rounded-md shadow-sm bg-blue-800 text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
-        {state.errors?.email && (
-          <p className="text-sm" style={{ color: "#dc2626" }}>
-            {state.errors.email}
-          </p>
-        )}
+        {state?.errors?.email && <p className="mt-1 text-sm text-red-400">{state.errors.email[0]}</p>}
       </div>
 
-      <div className="space-y-3">
-        <label htmlFor="password" className="block text-sm font-medium mb-1 text-white">
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-white">
           Password
         </label>
         <input
           id="password"
           name="password"
           type="password"
-          autoComplete="off"
+          autoComplete="current-password"
           required
-          defaultValue=""
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
+          className="mt-1 block w-full px-5 py-2 border border-blue-800 rounded-md shadow-sm bg-blue-800 text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
-        {state.errors?.password && (
-          <p className="text-sm" style={{ color: "#dc2626" }}>
-            {state.errors.password}
-          </p>
-        )}
+        {state?.errors?.password && <p className="mt-1 text-sm text-red-400">{state.errors.password[0]}</p>}
       </div>
 
-      <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 text-white"
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
-      </div>
+      {state?.message && (
+        <div className="rounded-md bg-red-900 p-3">
+          <p className="text-sm text-red-200">{state.message}</p>
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isPending ? "Signing in..." : "Sign in"}
+      </button>
     </form>
   )
 }
