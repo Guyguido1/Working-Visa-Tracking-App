@@ -152,9 +152,14 @@ body {
   color: #90cdf4 !important; /* lighter blue for better visibility */
 }
 
-/* Auth form exception for dark mode */
+/* Auth pages exception for dark mode - UPDATED TO FIX OPACITY ISSUE */
+/* This ensures ALL content on auth pages (login/register) is visible */
+[data-theme="dark"] .min-h-screen.flex.flex-col.items-center.justify-center,
+[data-theme="dark"] .min-h-screen.flex.flex-col.items-center.justify-center *,
 [data-theme="dark"] .auth-form,
 [data-theme="dark"] .auth-form h1,
+[data-theme="dark"] .auth-form h2,
+[data-theme="dark"] .auth-form h3,
 [data-theme="dark"] .auth-form p,
 [data-theme="dark"] .auth-form label,
 [data-theme="dark"] .auth-form div,
@@ -165,6 +170,13 @@ body {
 
 [data-theme="dark"] .auth-form input {
   background-color: #ffffff !important;
+}
+
+/* Specific override for the login page header content */
+[data-theme="dark"] .min-h-screen.bg-gray-50 h1,
+[data-theme="dark"] .min-h-screen.bg-gray-50 h2,
+[data-theme="dark"] .min-h-screen.bg-gray-50 p {
+  color: #000000 !important;
 }
 
 /* Delete note modal exception for dark mode */
