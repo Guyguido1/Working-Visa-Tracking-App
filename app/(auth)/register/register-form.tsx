@@ -1,66 +1,181 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useFormState } from "react-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { registerCompanyAdmin } from "./actions"
+import { registerCompanyAdmin, type RegisterFormState } from "./actions"
+import { Eye, EyeOff } from "lucide-react"
 
-export function RegisterForm() {
-  const [state, formAction, isPending] = useFormState(registerCompanyAdmin, null)
+const initialState: RegisterFormState = {}
+
+export default function RegisterForm() {
+  const [state, formAction, isPending] = useFormState(registerCompanyAdmin, initialState)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const router = useRouter()
+
+  // Handle successful registration
+  useEffect(() => {
+    if (state?.success && state?.message?.includes("Registration successful")) {
+      // Use setTimeout to allow the component to render before redirecting
+      const timer = setTimeout(() => {
+        router.push("/login?success=true&message=Registration+successful.+Please+log+in.")
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [state, router])
 
   return (
-    <form action={formAction} className="space-y-4 auth-form">
-      <div className="space-y-2">
-        <Label htmlFor="companyName" className="text-gray-900">
-          Company Name
-        </Label>
-        <Input
-          id="companyName"
-          name="companyName"
+    <form action={formAction} className="space-y-4">
+      {/* Form-level error message */}
+      {state?.errors?._form && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <p>{state.errors._form[0]}</p>
+        </div>
+      )}
+
+      {/* Success message */}
+      {state?.success && state?.message && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+          <p>{state.message}</p>
+        </div>
+      )}
+
+      {/* Name field */}
+      <div className="flex flex-col space-y-1">
+        <label htmlFor="name" className="text-sm font-medium text-gray-900">
+          Full Name
+        </label>
+        <input
+          id="name"
+          name="name"
           type="text"
-          placeholder="Your Company Ltd"
-          required
-          className="bg-white text-gray-900"
+          className={`px-3 py-2 bg-white border ${
+            state?.errors?.name ? "border-red-500" : "border-gray-300"
+          } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900`}
+          placeholder="Enter your full name"
         />
+        {state?.errors?.name && <p className="text-xs text-red-500 mt-1">{state.errors.name[0]}</p>}
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="adminName" className="text-gray-900">
-          Admin Name
-        </Label>
-        <Input
-          id="adminName"
-          name="adminName"
-          type="text"
-          placeholder="John Doe"
-          required
-          className="bg-white text-gray-900"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-gray-900">
+
+      {/* Email field */}
+      <div className="flex flex-col space-y-1">
+        <label htmlFor="email" className="text-sm font-medium text-gray-900">
           Email
-        </Label>
-        <Input
+        </label>
+        <input
           id="email"
           name="email"
           type="email"
-          placeholder="admin@company.com"
-          required
-          className="bg-white text-gray-900"
+          className={`px-3 py-2 bg-white border ${
+            state?.errors?.email ? "border-red-500" : "border-gray-300"
+          } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900`}
+          placeholder="Enter your email address"
         />
+        {state?.errors?.email && <p className="text-xs text-red-500 mt-1">{state.errors.email[0]}</p>}
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-gray-900">
+
+      {/* Company Name field */}
+      <div className="flex flex-col space-y-1">
+        <label htmlFor="companyName" className="text-sm font-medium text-gray-900">
+          Company Name
+        </label>
+        <input
+          id="companyName"
+          name="companyName"
+          type="text"
+          className={`px-3 py-2 bg-white border ${
+            state?.errors?.companyName ? "border-red-500" : "border-gray-300"
+          } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900`}
+          placeholder="Enter your company name"
+        />
+        {state?.errors?.companyName && <p className="text-xs text-red-500 mt-1">{state.errors.companyName[0]}</p>}
+      </div>
+
+      {/* Password field */}
+      <div className="flex flex-col space-y-1">
+        <label htmlFor="password" className="text-sm font-medium text-gray-900">
           Password
-        </Label>
-        <Input id="password" name="password" type="password" required className="bg-white text-gray-900" />
+        </label>
+        <div className="relative">
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            className={`px-3 py-2 bg-white border ${
+              state?.errors?.password ? "border-red-500" : "border-gray-300"
+            } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-gray-900`}
+            placeholder="Create a password"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+        {state?.errors?.password && <p className="text-xs text-red-500 mt-1">{state.errors.password[0]}</p>}
       </div>
-      {state?.error && <div className="text-red-700 text-sm">{state.error}</div>}
-      {state?.success && <div className="text-green-700 text-sm">Registration successful! Redirecting...</div>}
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Creating account..." : "Create account"}
-      </Button>
+
+      {/* Confirm Password field */}
+      <div className="flex flex-col space-y-1">
+        <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-900">
+          Confirm Password
+        </label>
+        <div className="relative">
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            className={`px-3 py-2 bg-white border ${
+              state?.errors?.confirmPassword ? "border-red-500" : "border-gray-300"
+            } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-gray-900`}
+            placeholder="Confirm your password"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+        {state?.errors?.confirmPassword && (
+          <p className="text-xs text-red-500 mt-1">{state.errors.confirmPassword[0]}</p>
+        )}
+      </div>
+
+      {/* Submit button */}
+      <div className="mt-6">
+        <button
+          type="submit"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Registering...
+            </>
+          ) : (
+            "Register"
+          )}
+        </button>
+      </div>
     </form>
   )
 }

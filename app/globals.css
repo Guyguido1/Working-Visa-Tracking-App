@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -29,9 +39,16 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  [data-theme="dark"] {
+  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -56,6 +73,14 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -82,110 +107,162 @@
   color: #ffffff !important;
 }
 
-/* Auth layout exception - force light mode styling for auth pages */
-.auth-layout,
-.auth-layout *:not(svg):not(path) {
-  background-color: #f9fafb !important;
-  color: #1f2937 !important;
+/* Exceptions for elements that should remain dark */
+[data-theme="dark"] .btn-ghost,
+[data-theme="dark"] .btn-outline {
+  color: inherit !important;
 }
 
-.auth-layout h1,
-.auth-layout h2,
-.auth-layout h3,
-.auth-layout h4,
-.auth-layout h5,
-.auth-layout h6,
-.auth-layout p,
-.auth-layout span,
-.auth-layout div,
-.auth-layout label {
-  color: #1f2937 !important;
+/* Calendar specific overrides for dark mode */
+[data-theme="dark"] .customer-calendar button {
+  color: #ffffff !important;
 }
 
-.auth-layout input {
-  background-color: #ffffff !important;
-  color: #1f2937 !important;
+[data-theme="dark"] .customer-calendar button.today {
+  color: #90cdf4 !important; /* lighter blue for better visibility */
+  border-color: #90cdf4 !important;
 }
 
-.auth-layout .text-red-700 {
-  color: #b91c1c !important;
+[data-theme="dark"] .customer-calendar .text-gray-500,
+[data-theme="dark"] .customer-calendar .text-gray-600,
+[data-theme="dark"] .customer-calendar .text-blue-600,
+[data-theme="dark"] .customer-calendar .text-blue-800 {
+  color: #90cdf4 !important; /* lighter blue for better visibility */
 }
 
-.auth-layout .text-green-700 {
-  color: #15803d !important;
-}
-
-.auth-layout .text-blue-600 {
-  color: #2563eb !important;
-}
-
-.auth-layout .text-gray-600 {
-  color: #4b5563 !important;
-}
-
-.auth-layout .text-gray-700 {
-  color: #374151 !important;
-}
-
-.auth-layout .text-gray-900 {
-  color: #111827 !important;
-}
-
-/* Auth form exception for dark mode */
-[data-theme="dark"] .auth-form,
-[data-theme="dark"] .auth-form h1,
-[data-theme="dark"] .auth-form p,
-[data-theme="dark"] .auth-form label,
-[data-theme="dark"] .auth-form div,
-[data-theme="dark"] .auth-form span,
-[data-theme="dark"] .auth-form input {
+/* Delete note modal exception for dark mode */
+[data-theme="dark"] .delete-note-modal,
+[data-theme="dark"] .delete-note-modal h3,
+[data-theme="dark"] .delete-note-modal p {
   color: #000000 !important;
 }
 
-/* Ensure white backgrounds for inputs in auth forms */
-[data-theme="dark"] .auth-form input {
-  background-color: #ffffff !important;
+/* Delete note modal buttons in dark mode */
+[data-theme="dark"] .delete-note-modal .btn {
+  color: #000000 !important;
 }
 
-/* Dark mode table styling - white text */
-[data-theme="dark"] table,
-[data-theme="dark"] thead,
-[data-theme="dark"] tbody,
-[data-theme="dark"] tr,
-[data-theme="dark"] th,
+[data-theme="dark"] .delete-note-modal .btn-error {
+  color: #ffffff !important;
+}
+
+/* Form label spacing to prevent overlap with focus rings */
+.form-label-spacing {
+  margin-bottom: 0.5rem;
+}
+
+/* Dark mode styles for tables */
+[data-theme="dark"] table {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] th {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
 [data-theme="dark"] td {
+  border-color: #4b5563 !important;
   color: #ffffff !important;
 }
 
-/* Dark mode card styling - white text */
-[data-theme="dark"] .card,
-[data-theme="dark"] .card-header,
-[data-theme="dark"] .card-content,
-[data-theme="dark"] .card-title,
-[data-theme="dark"] .card-description {
-  color: #ffffff !important;
+/* Dark mode styles for cards */
+[data-theme="dark"] .bg-white {
+  background-color: #1f2937 !important;
 }
 
-/* Override for calendar in dark mode */
+[data-theme="dark"] .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+/* Dark mode for calendar */
 [data-theme="dark"] .rdp {
-  --rdp-accent-color: #3b82f6;
-  --rdp-background-color: #1f2937;
-  color: #ffffff !important;
+  --rdp-background-color: #1f2937 !important;
+  background-color: #1f2937 !important;
 }
 
 [data-theme="dark"] .rdp-day {
   color: #ffffff !important;
 }
 
-[data-theme="dark"] .rdp-day_selected {
-  background-color: #3b82f6 !important;
-  color: #ffffff !important;
-}
-
-[data-theme="dark"] .rdp-caption {
-  color: #ffffff !important;
-}
-
 [data-theme="dark"] .rdp-head_cell {
   color: #9ca3af !important;
+}
+
+/* AUTH PAGE LIGHT MODE OVERRIDE */
+.dark .auth-page,
+.auth-page {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+.dark .auth-page *,
+.auth-page * {
+  color: #111827 !important;
+}
+
+.dark .auth-page input,
+.auth-page input {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+.dark .auth-page label,
+.auth-page label {
+  color: #111827 !important;
+}
+
+.dark .auth-page button,
+.auth-page button {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.dark .auth-page a,
+.auth-page a {
+  color: #2563eb !important;
+}
+
+.dark .auth-page .bg-white,
+.auth-page .bg-white {
+  background-color: #ffffff !important;
+}
+
+.dark .auth-page .text-red-700,
+.auth-page .text-red-700 {
+  color: #b91c1c !important;
+}
+
+.dark .auth-page .text-green-700,
+.auth-page .text-green-700 {
+  color: #15803d !important;
+}
+
+.dark .auth-page .text-gray-600,
+.auth-page .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.dark .auth-page .text-gray-900,
+.auth-page .text-gray-900 {
+  color: #111827 !important;
+}
+
+/* Force table text to be white in dark mode */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table tr,
+[data-theme="dark"] .table tbody,
+[data-theme="dark"] .table thead {
+  color: #ffffff !important;
+}
+
+/* Force card text to be white in dark mode */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-content {
+  color: #ffffff !important;
 }
