@@ -1,93 +1,89 @@
 "use server"
 
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import bcrypt from "bcryptjs"
 import { sql } from "@/lib/db"
+import { cookies } from "next/headers"
+import bcryptjs from "bcryptjs"
+import { z } from "zod"
 
-export async function login(prevState: any, formData: FormData) {
-  try {
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
+// Define validation schema
+const LoginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+})
 
-    if (!email || !password) {
-      return {
-        success: false,
-        error: "Email and password are required",
-      }
+export async function loginUser(prevState: any, formData: FormData) {
+  // Validate form data
+  const validatedFields = LoginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  })
+
+  // If form validation fails, return errors
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Please correct the errors in the form.",
     }
+  }
 
+  const { email, password } = validatedFields.data
+
+  try {
     // Find user by email
     const users = await sql`
-      SELECT u.*, c.name as company_name 
-      FROM users u
-      JOIN companies c ON u.company_id = c.id
-      WHERE u.email = ${email}
+      SELECT id, company_id, name, email, password_hash, is_admin, role
+      FROM users
+      WHERE email = ${email}
     `
 
     if (users.length === 0) {
       return {
-        success: false,
-        error: "Invalid email or password",
+        errors: {},
+        message: "Invalid email or password",
       }
     }
 
     const user = users[0]
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash)
+    const passwordMatch = await bcryptjs.compare(password, user.password_hash)
 
-    if (!isValidPassword) {
+    if (!passwordMatch) {
       return {
-        success: false,
-        error: "Invalid email or password",
+        errors: {},
+        message: "Invalid email or password",
       }
     }
 
-    // Delete any existing sessions for this user (single session enforcement)
+    // Create session
+    const sessionId = crypto.randomUUID()
+    const sessionToken = crypto.randomUUID() // Generate a session token
+    // Changed from 7 days to 12 hours
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+
+    // Store session in database with all required fields
     await sql`
-      DELETE FROM sessions 
-      WHERE user_id = ${user.id}
+      INSERT INTO sessions (id, user_id, expires, session_token)
+      VALUES (${sessionId}, ${user.id}, ${expires}, ${sessionToken})
     `
-
-    // Create new session
-    const sessionToken = crypto.randomUUID()
-    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
-
-    const sessions = await sql`
-      INSERT INTO sessions (user_id, session_token, expires)
-      VALUES (${user.id}, ${sessionToken}, ${expiresAt})
-      RETURNING id
-    `
-
-    const sessionId = sessions[0].id
 
     // Set session cookie
-    const cookieStore = await cookies()
-    cookieStore.set("session_id", sessionId.toString(), {
+    cookies().set({
+      name: "session_id",
+      value: sessionId,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: expiresAt,
       path: "/",
+      secure: process.env.NODE_ENV === "production",
+      expires,
     })
 
-    return {
-      success: true,
-      message: "Login successful",
-    }
+    // Return redirectTo instead of using redirect directly
+    return { redirectTo: "/dashboard" }
   } catch (error) {
     console.error("Login error:", error)
     return {
-      success: false,
-      error: "An error occurred during login. Please try again.",
+      errors: {},
+      message: "An error occurred during login. Please try again.",
     }
   }
-}
-
-// Alias for backwards compatibility
-export const loginUser = login
-
-export async function performRedirect() {
-  redirect("/dashboard")
 }

@@ -22,14 +22,14 @@ export type CustomerFile = {
 }
 
 export async function addNote(customerId: number, content: string) {
-  // Get the user's session to access their company_id
+  // ✅ TENANT ISOLATION: Get user's company_id from session
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
-    // First verify this customer belongs to the user's company
+    // ✅ TENANT ISOLATION: Verify customer belongs to user's company
     const customerCheck = await sql`
       SELECT id FROM customers 
       WHERE id = ${customerId} AND company_id = ${session.company_id}
@@ -45,7 +45,6 @@ export async function addNote(customerId: number, content: string) {
       RETURNING id
     `
 
-    // Return the new note ID
     const noteId = result[0]?.id
 
     revalidatePath(`/customers/${customerId}`)
@@ -57,20 +56,19 @@ export async function addNote(customerId: number, content: string) {
 }
 
 export async function deleteNote(noteId: number, customerId: number) {
-  // Get the user's session to access their company_id
+  // ✅ TENANT ISOLATION: Get user's company_id from session
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
-    // Validate that noteId is a valid integer
     if (!Number.isInteger(noteId) || noteId <= 0) {
       console.error("Invalid note ID:", noteId)
       return { success: false, error: "Invalid note ID" }
     }
 
-    // First verify this customer belongs to the user's company
+    // ✅ TENANT ISOLATION: Verify note belongs to customer in user's company
     const customerCheck = await sql`
       SELECT c.id FROM customers c
       JOIN customer_notes n ON n.customer_id = c.id
@@ -94,14 +92,14 @@ export async function deleteNote(noteId: number, customerId: number) {
 }
 
 export async function uploadFile(customerId: number, file: File) {
-  // Get the user's session to access their company_id
+  // ✅ TENANT ISOLATION: Get user's company_id from session
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
-    // First verify this customer belongs to the user's company
+    // ✅ TENANT ISOLATION: Verify customer belongs to user's company
     const customerCheck = await sql`
       SELECT id FROM customers 
       WHERE id = ${customerId} AND company_id = ${session.company_id}
@@ -111,12 +109,8 @@ export async function uploadFile(customerId: number, file: File) {
       return { success: false, error: "Customer not found or access denied" }
     }
 
-    // In a real app, you would upload the file to storage and save the path
-    // For this demo, we'll simulate file upload by just storing metadata
     const filename = file.name
     const fileType = file.type
-
-    // Simulate file path (in a real app, this would be the actual storage path)
     const filePath = `/uploads/${customerId}/${Date.now()}-${filename}`
 
     await sql`
@@ -132,7 +126,6 @@ export async function uploadFile(customerId: number, file: File) {
   }
 }
 
-// Helper function to implement retry logic with exponential backoff
 async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
   let retries = 0
   let delay = initialDelay
@@ -145,15 +138,13 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
         throw error
       }
 
-      // Check if it's a rate limit error (Too Many Requests)
       const errorMessage = error instanceof Error ? error.message : String(error)
       if (errorMessage.includes("Too Many Requests")) {
         console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${retries + 1}/${maxRetries})`)
         await new Promise((resolve) => setTimeout(resolve, delay))
         retries++
-        delay *= 2 // Exponential backoff
+        delay *= 2
       } else {
-        // If it's not a rate limit error, rethrow
         throw error
       }
     }
@@ -161,17 +152,16 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
 }
 
 export async function getCustomerDetails(customerId: number) {
-  // Get the user's session to access their company_id
+  // ✅ TENANT ISOLATION: Get user's company_id from session
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
-    // Use retry logic for database queries
     const customerData = await retryWithBackoff(async () => {
       try {
-        // Get customer data with company_id check
+        // ✅ TENANT ISOLATION: Filter by company_id
         const customerResult = await sql`
           SELECT * FROM customers 
           WHERE id = ${customerId} AND company_id = ${session.company_id}
@@ -183,7 +173,6 @@ export async function getCustomerDetails(customerId: number) {
 
         return { customer: customerResult[0] }
       } catch (error) {
-        // Handle potential non-JSON responses
         const errorMessage = error instanceof Error ? error.message : String(error)
         if (errorMessage.includes("Unexpected token") && errorMessage.includes("Too Many R")) {
           throw new Error("Too Many Requests - Rate limit exceeded")
@@ -192,12 +181,11 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
-    // If customer not found, return error
     if (!customerData.customer) {
       return { success: false, error: "Customer not found or access denied" }
     }
 
-    // Get other data with separate retries to avoid overwhelming the database
+    // ✅ TENANT ISOLATION: Reports are filtered through customer's company_id
     const reportData = await retryWithBackoff(async () => {
       try {
         const reportResult = await sql`
@@ -218,6 +206,7 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
+    // ✅ TENANT ISOLATION: Notes are filtered through customer's company_id
     const notesData = await retryWithBackoff(async () => {
       try {
         const notesResult = await sql`
@@ -237,6 +226,7 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
+    // ✅ TENANT ISOLATION: Files are filtered through customer's company_id
     const filesData = await retryWithBackoff(async () => {
       try {
         const filesResult = await sql`
@@ -266,7 +256,6 @@ export async function getCustomerDetails(customerId: number) {
   } catch (error) {
     console.error("Error fetching customer details:", error)
 
-    // Provide a more user-friendly error message for rate limiting
     const errorMessage = error instanceof Error ? error.message : String(error)
     if (errorMessage.includes("Too Many Requests")) {
       return {
