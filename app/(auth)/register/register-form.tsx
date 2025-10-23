@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useFormState } from "react-dom"
 import { registerCompanyAdmin, type RegisterFormState } from "./actions"
 import { Eye, EyeOff } from "lucide-react"
 
 const initialState: RegisterFormState = {}
 
 export default function RegisterForm() {
-  const [state, formAction, isPending] = useActionState(registerCompanyAdmin, initialState)
+  const [state, formAction, isPending] = useFormState(registerCompanyAdmin, initialState)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
