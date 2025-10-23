@@ -1,25 +1,31 @@
 "use client"
 
 import { useFormState } from "react-dom"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { login } from "./actions"
+import { login, performRedirect } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useEffect } from "react"
+import Link from "next/link"
 
-export default function LoginForm() {
-  const [state, formAction, isPending] = useFormState(login, null)
-  const router = useRouter()
+const initialState = {
+  success: false,
+  error: "",
+  message: "",
+}
+
+export function LoginForm() {
+  const [state, formAction, isPending] = useFormState(login, initialState)
 
   useEffect(() => {
-    // If login is successful (no error returned), the server action will handle the redirect
-    // This is just for handling any client-side state if needed
-  }, [state, router])
+    if (state.success) {
+      performRedirect()
+    }
+  }, [state.success])
 
   return (
-    <form action={formAction} className="space-y-4">
-      <div>
+    <form action={formAction} className="space-y-6">
+      <div className="space-y-2">
         <Label htmlFor="email" className="text-white">
           Email
         </Label>
@@ -27,13 +33,13 @@ export default function LoginForm() {
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
         />
       </div>
-      <div>
+
+      <div className="space-y-2">
         <Label htmlFor="password" className="text-white">
           Password
         </Label>
@@ -41,18 +47,29 @@ export default function LoginForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
         />
       </div>
-      {state?.error && (
+
+      {state.error && (
         <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">{state.error}</div>
       )}
+
+      {state.success && (
+        <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded">{state.message}</div>
+      )}
+
       <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white" disabled={isPending}>
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? "Signing in..." : "Sign In"}
       </Button>
+
+      <div className="text-center">
+        <Link href="/register" className="text-blue-400 hover:text-blue-300 text-sm">
+          Don't have an account? Register here
+        </Link>
+      </div>
     </form>
   )
 }

@@ -1,43 +1,33 @@
 "use server"
 
-import { z } from "zod"
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import bcrypt from "bcryptjs"
-import { neon } from "@neondatabase/serverless"
-
-const sql = neon(process.env.DATABASE_URL!)
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-})
+import { sql } from "@/lib/db"
 
 export async function login(prevState: any, formData: FormData) {
-  const validatedFields = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  })
-
-  if (!validatedFields.success) {
-    return {
-      error: "Invalid email or password",
-    }
-  }
-
-  const { email, password } = validatedFields.data
-
   try {
-    // Get user from database
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!email || !password) {
+      return {
+        success: false,
+        error: "Email and password are required",
+      }
+    }
+
+    // Find user by email
     const users = await sql`
-      SELECT u.*, t.id as tenant_id, t.company_name 
+      SELECT u.*, c.name as company_name 
       FROM users u
-      JOIN tenants t ON u.tenant_id = t.id
+      JOIN companies c ON u.company_id = c.id
       WHERE u.email = ${email}
     `
 
     if (users.length === 0) {
       return {
+        success: false,
         error: "Invalid email or password",
       }
     }
@@ -45,15 +35,16 @@ export async function login(prevState: any, formData: FormData) {
     const user = users[0]
 
     // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.password_hash)
+    const isValidPassword = await bcrypt.compare(password, user.password_hash)
 
-    if (!passwordMatch) {
+    if (!isValidPassword) {
       return {
+        success: false,
         error: "Invalid email or password",
       }
     }
 
-    // Delete any existing sessions for this user (enforce single session)
+    // Delete any existing sessions for this user (single session enforcement)
     await sql`
       DELETE FROM sessions 
       WHERE user_id = ${user.id}
@@ -63,24 +54,32 @@ export async function login(prevState: any, formData: FormData) {
     const sessionToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
 
-    await sql`
-      INSERT INTO sessions (user_id, session_token, expires_at)
+    const sessions = await sql`
+      INSERT INTO sessions (user_id, session_token, expires)
       VALUES (${user.id}, ${sessionToken}, ${expiresAt})
+      RETURNING id
     `
+
+    const sessionId = sessions[0].id
 
     // Set session cookie
     const cookieStore = await cookies()
-    cookieStore.set("session", sessionToken, {
+    cookieStore.set("session_id", sessionId.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       expires: expiresAt,
+      path: "/",
     })
 
-    redirect("/dashboard")
+    return {
+      success: true,
+      message: "Login successful",
+    }
   } catch (error) {
     console.error("Login error:", error)
     return {
+      success: false,
       error: "An error occurred during login. Please try again.",
     }
   }
@@ -88,3 +87,7 @@ export async function login(prevState: any, formData: FormData) {
 
 // Alias for backwards compatibility
 export const loginUser = login
+
+export async function performRedirect() {
+  redirect("/dashboard")
+}

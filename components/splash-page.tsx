@@ -1,7 +1,8 @@
 "use client"
 
-import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard, Globe } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Shield, Users, CheckCircle, Clock, Calendar, Cake, LayoutDashboard, Globe } from "lucide-react"
 
 export function SplashPage() {
   return (
@@ -24,17 +25,11 @@ export function SplashPage() {
           A secure, all-in-one platform for visa agencies to track customer statuses, reports, and expirations.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Link
-            href="/login"
-            className="px-8 py-3 rounded-md bg-blue-700 text-white font-medium text-lg hover:bg-blue-800 transition-colors"
-          >
-            Login
+          <Link href="/login">
+            <Button className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 text-lg">Login</Button>
           </Link>
-          <Link
-            href="/register"
-            className="px-8 py-3 rounded-md bg-blue-700 text-white font-medium text-lg hover:bg-blue-800 transition-colors"
-          >
-            Register
+          <Link href="/register">
+            <Button className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 text-lg">Register</Button>
           </Link>
         </div>
       </section>
@@ -129,11 +124,10 @@ export function SplashPage() {
       <section className="bg-blue-700 py-10">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to streamline your visa management?</h2>
-          <Link
-            href="/register"
-            className="px-8 py-3 rounded-md bg-white text-blue-700 font-medium text-lg hover:bg-gray-100 transition-colors inline-block"
-          >
-            Get Started Today
+          <Link href="/register">
+            <Button className="bg-white text-blue-700 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+              Get Started Today
+            </Button>
           </Link>
         </div>
       </section>

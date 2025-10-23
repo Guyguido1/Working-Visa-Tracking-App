@@ -1,58 +1,34 @@
 "use client"
 
 import { useFormState } from "react-dom"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { register } from "./actions"
+import { register, performRedirect } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useEffect } from "react"
+import Link from "next/link"
 
-export default function RegisterForm() {
-  const [state, formAction, isPending] = useFormState(register, null)
-  const router = useRouter()
+const initialState = {
+  success: false,
+  error: "",
+  message: "",
+}
+
+export function RegisterForm() {
+  const [state, formAction, isPending] = useFormState(register, initialState)
 
   useEffect(() => {
-    if (state?.success) {
-      // Redirect to login page after successful registration
+    if (state.success) {
       const timer = setTimeout(() => {
-        router.push("/login")
+        performRedirect()
       }, 2000)
       return () => clearTimeout(timer)
     }
-  }, [state, router])
+  }, [state.success])
 
   return (
-    <form action={formAction} className="space-y-4">
-      <div>
-        <Label htmlFor="name" className="text-white">
-          Full Name
-        </Label>
-        <Input
-          id="name"
-          name="name"
-          type="text"
-          autoComplete="name"
-          required
-          className="bg-white text-gray-900 border-blue-700"
-          disabled={isPending}
-        />
-      </div>
-      <div>
-        <Label htmlFor="email" className="text-white">
-          Email
-        </Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          className="bg-white text-gray-900 border-blue-700"
-          disabled={isPending}
-        />
-      </div>
-      <div>
+    <form action={formAction} className="space-y-6">
+      <div className="space-y-2">
         <Label htmlFor="companyName" className="text-white">
           Company Name
         </Label>
@@ -60,13 +36,41 @@ export default function RegisterForm() {
           id="companyName"
           name="companyName"
           type="text"
-          autoComplete="organization"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
         />
       </div>
-      <div>
+
+      <div className="space-y-2">
+        <Label htmlFor="fullName" className="text-white">
+          Full Name
+        </Label>
+        <Input
+          id="fullName"
+          name="fullName"
+          type="text"
+          required
+          className="bg-white text-gray-900 border-blue-700"
+          disabled={isPending}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-white">
+          Email
+        </Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          className="bg-white text-gray-900 border-blue-700"
+          disabled={isPending}
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="password" className="text-white">
           Password
         </Label>
@@ -74,35 +78,31 @@ export default function RegisterForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="new-password"
           required
+          minLength={8}
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
         />
+        <p className="text-sm text-blue-300">Must be at least 8 characters long</p>
       </div>
-      <div>
-        <Label htmlFor="confirmPassword" className="text-white">
-          Confirm Password
-        </Label>
-        <Input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          required
-          className="bg-white text-gray-900 border-blue-700"
-          disabled={isPending}
-        />
-      </div>
-      {state?.error && (
+
+      {state.error && (
         <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">{state.error}</div>
       )}
-      {state?.success && (
-        <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded">{state.success}</div>
+
+      {state.success && (
+        <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded">{state.message}</div>
       )}
+
       <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white" disabled={isPending}>
-        {isPending ? "Creating account..." : "Create account"}
+        {isPending ? "Creating account..." : "Register"}
       </Button>
+
+      <div className="text-center">
+        <Link href="/login" className="text-blue-400 hover:text-blue-300 text-sm">
+          Already have an account? Sign in here
+        </Link>
+      </div>
     </form>
   )
 }
