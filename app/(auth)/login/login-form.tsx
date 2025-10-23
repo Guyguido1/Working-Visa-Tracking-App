@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useActionState } from "react"
+import { useFormState } from "react-dom"
 import { useRouter } from "next/navigation"
 import { loginUser } from "./actions"
 import { AlertCircle } from "lucide-react"
@@ -13,10 +13,10 @@ const initialState = {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useActionState(loginUser, initialState)
+  const [state, formAction] = useFormState(loginUser, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Handle redirect after successful login - Added null check
+  // Handle redirect after successful login
   useEffect(() => {
     if (state && state.redirectTo) {
       router.push(state.redirectTo)
@@ -44,7 +44,7 @@ export default function LoginForm() {
       )}
 
       <div className="space-y-3">
-        <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: "black" }}>
+        <label htmlFor="email" className="block text-sm font-medium mb-1 text-white">
           Email
         </label>
         <input
@@ -53,8 +53,7 @@ export default function LoginForm() {
           type="email"
           autoComplete="email"
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white"
-          style={{ color: "black" }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
         />
         {state.errors?.email && (
           <p className="text-sm" style={{ color: "#dc2626" }}>
@@ -64,7 +63,7 @@ export default function LoginForm() {
       </div>
 
       <div className="space-y-3">
-        <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: "black" }}>
+        <label htmlFor="password" className="block text-sm font-medium mb-1 text-white">
           Password
         </label>
         <input
@@ -73,8 +72,7 @@ export default function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white"
-          style={{ color: "black" }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
         />
         {state.errors?.password && (
           <p className="text-sm" style={{ color: "#dc2626" }}>
@@ -87,8 +85,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          style={{ color: "white" }}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 text-white"
         >
           {isSubmitting ? "Logging in..." : "Login"}
         </button>

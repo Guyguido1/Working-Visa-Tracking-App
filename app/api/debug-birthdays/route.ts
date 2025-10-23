@@ -2,22 +2,21 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/app/actions/session"
 
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   try {
-    // Get the user's session to access their company_id
     const session = await getSession()
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch all customers with their date of birth
     const customers = await sql`
       SELECT id, first_name, last_name, date_of_birth
       FROM customers
       WHERE company_id = ${session.company_id}
     `
 
-    // Current date info
     const today = new Date()
     const tomorrow = new Date()
     tomorrow.setDate(today.getDate() + 1)
@@ -27,7 +26,6 @@ export async function GET() {
     const tomorrowMonth = tomorrow.getMonth()
     const tomorrowDate = tomorrow.getDate()
 
-    // Process each customer
     const results = customers.map((customer) => {
       if (!customer.date_of_birth) {
         return {
