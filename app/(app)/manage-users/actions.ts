@@ -2,242 +2,185 @@
 
 import { sql } from "@/lib/db"
 import { hashPassword } from "@/lib/auth"
-import { getSession } from "@/app/actions/session"
-import { z } from "zod"
+import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
-const UserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  role: z.enum(["admin", "user"], { required_error: "Role is required" }),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-})
+export async function fetchUsers() {
+  const session = await getSession()
 
-export type UserFormState = {
-  errors?: {
-    name?: string[]
-    email?: string[]
-    role?: string[]
-    password?: string[]
-    _form?: string[]
+  if (!session || !session.is_admin) {
+    throw new Error("Unauthorized")
   }
-  success?: boolean
-  message?: string
+
+  const users = await sql`
+    SELECT id, name, email, role, is_admin, created_at
+    FROM users
+    WHERE company_id = ${session.company_id}
+    ORDER BY created_at DESC
+  `
+
+  return users
 }
 
-export async function fetchCompanyName(): Promise<string> {
+export async function fetchCompanyName() {
   const session = await getSession()
+
   if (!session) {
-    return "Unknown Company"
+    return null
   }
 
   const companies = await sql`
     SELECT name FROM companies WHERE id = ${session.company_id}
   `
 
-  return companies.length > 0 ? companies[0].name : "Unknown Company"
+  return companies[0]?.name || null
 }
 
-export async function fetchUsers() {
+export async function addUser(formData: FormData) {
   const session = await getSession()
-  if (!session) {
-    throw new Error("Unauthorized")
-  }
 
-  const users = await sql`
-    SELECT id, name, email, role, is_admin
-    FROM users
-    WHERE company_id = ${session.company_id}
-    ORDER BY name ASC
-  `
-
-  return users
-}
-
-export async function addUser(prevState: UserFormState | undefined, formData: FormData): Promise<UserFormState> {
-  const session = await getSession()
   if (!session || !session.is_admin) {
-    return {
-      errors: {
-        _form: ["Unauthorized"],
-      },
-    }
+    return { success: false, error: "Unauthorized" }
   }
 
-  const validatedFields = UserSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    role: formData.get("role"),
-    password: formData.get("password"),
-  })
+  const name = formData.get("name") as string
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const role = formData.get("role") as string
+  const isAdmin = formData.get("isAdmin") === "true"
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    }
-  }
-
-  const { name, email, role, password } = validatedFields.data
-
-  if (!password) {
-    return {
-      errors: {
-        password: ["Password is required"],
-      },
-    }
+  if (!name || !email || !password || !role) {
+    return { success: false, error: "All fields are required" }
   }
 
   try {
+    // Check if email already exists in this company
     const existingUsers = await sql`
-      SELECT id FROM users WHERE email = ${email}
+      SELECT id FROM users 
+      WHERE email = ${email} AND company_id = ${session.company_id}
     `
 
     if (existingUsers.length > 0) {
-      return {
-        errors: {
-          email: ["Email already exists"],
-        },
-      }
+      return { success: false, error: "Email already exists" }
     }
 
-    const passwordHash = await hashPassword(password)
+    const hashedPassword = await hashPassword(password)
 
     await sql`
-      INSERT INTO users (company_id, name, email, password_hash, is_admin, role)
-      VALUES (${session.company_id}, ${name}, ${email}, ${passwordHash}, ${role === "admin"}, ${role})
+      INSERT INTO users (name, email, password, role, is_admin, company_id)
+      VALUES (${name}, ${email}, ${hashedPassword}, ${role}, ${isAdmin}, ${session.company_id})
     `
 
     revalidatePath("/manage-users")
-
-    return {
-      success: true,
-      message: "User added successfully",
-    }
+    return { success: true }
   } catch (error) {
     console.error("Error adding user:", error)
-    return {
-      errors: {
-        _form: ["Failed to add user"],
-      },
-    }
+    return { success: false, error: "Failed to add user" }
   }
 }
 
-export async function updateUser(
-  userId: string,
-  prevState: UserFormState | undefined,
-  formData: FormData,
-): Promise<UserFormState> {
+export async function updateUser(userId: number, formData: FormData) {
   const session = await getSession()
+
   if (!session || !session.is_admin) {
-    return {
-      errors: {
-        _form: ["Unauthorized"],
-      },
-    }
+    return { success: false, error: "Unauthorized" }
   }
 
-  const validatedFields = UserSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    role: formData.get("role"),
-    password: formData.get("password") || undefined,
-  })
+  const name = formData.get("name") as string
+  const email = formData.get("email") as string
+  const role = formData.get("role") as string
+  const isAdmin = formData.get("isAdmin") === "true"
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    }
+  if (!name || !email || !role) {
+    return { success: false, error: "All fields are required" }
   }
-
-  const { name, email, role, password } = validatedFields.data
 
   try {
-    const existingUsers = await sql`
-      SELECT id FROM users WHERE email = ${email} AND id != ${userId}
+    // Verify user belongs to same company
+    const userCheck = await sql`
+      SELECT id FROM users 
+      WHERE id = ${userId} AND company_id = ${session.company_id}
     `
 
-    if (existingUsers.length > 0) {
-      return {
-        errors: {
-          email: ["Email already exists"],
-        },
-      }
+    if (userCheck.length === 0) {
+      return { success: false, error: "User not found" }
     }
 
-    if (password) {
-      const passwordHash = await hashPassword(password)
-      await sql`
-        UPDATE users
-        SET name = ${name}, email = ${email}, role = ${role}, is_admin = ${role === "admin"}, password_hash = ${passwordHash}
-        WHERE id = ${userId} AND company_id = ${session.company_id}
-      `
-    } else {
-      await sql`
-        UPDATE users
-        SET name = ${name}, email = ${email}, role = ${role}, is_admin = ${role === "admin"}
-        WHERE id = ${userId} AND company_id = ${session.company_id}
-      `
-    }
+    await sql`
+      UPDATE users
+      SET name = ${name}, email = ${email}, role = ${role}, is_admin = ${isAdmin}
+      WHERE id = ${userId} AND company_id = ${session.company_id}
+    `
 
     revalidatePath("/manage-users")
-
-    return {
-      success: true,
-      message: "User updated successfully",
-    }
+    return { success: true }
   } catch (error) {
     console.error("Error updating user:", error)
-    return {
-      errors: {
-        _form: ["Failed to update user"],
-      },
-    }
+    return { success: false, error: "Failed to update user" }
   }
 }
 
-export async function deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+export async function updateUserPassword(userId: number, newPassword: string) {
   const session = await getSession()
+
   if (!session || !session.is_admin) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
+    // Verify user belongs to same company
+    const userCheck = await sql`
+      SELECT id FROM users 
+      WHERE id = ${userId} AND company_id = ${session.company_id}
+    `
+
+    if (userCheck.length === 0) {
+      return { success: false, error: "User not found" }
+    }
+
+    const hashedPassword = await hashPassword(newPassword)
+
+    await sql`
+      UPDATE users
+      SET password = ${hashedPassword}
+      WHERE id = ${userId} AND company_id = ${session.company_id}
+    `
+
+    revalidatePath("/manage-users")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating password:", error)
+    return { success: false, error: "Failed to update password" }
+  }
+}
+
+export async function deleteUser(userId: number) {
+  const session = await getSession()
+
+  if (!session || !session.is_admin) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  try {
+    // Verify user belongs to same company and is not self
+    const userCheck = await sql`
+      SELECT id FROM users 
+      WHERE id = ${userId} AND company_id = ${session.company_id} AND id != ${session.user_id}
+    `
+
+    if (userCheck.length === 0) {
+      return { success: false, error: "Cannot delete this user" }
+    }
+
     await sql`
       DELETE FROM users
       WHERE id = ${userId} AND company_id = ${session.company_id}
     `
 
     revalidatePath("/manage-users")
-
     return { success: true }
   } catch (error) {
     console.error("Error deleting user:", error)
     return { success: false, error: "Failed to delete user" }
-  }
-}
-
-export async function updateUserPassword(
-  userId: string,
-  newPassword: string,
-): Promise<{ success: boolean; error?: string }> {
-  const session = await getSession()
-  if (!session || !session.is_admin) {
-    return { success: false, error: "Unauthorized" }
-  }
-
-  try {
-    const passwordHash = await hashPassword(newPassword)
-
-    await sql`
-      UPDATE users
-      SET password_hash = ${passwordHash}
-      WHERE id = ${userId} AND company_id = ${session.company_id}
-    `
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error updating password:", error)
-    return { success: false, error: "Failed to update password" }
   }
 }

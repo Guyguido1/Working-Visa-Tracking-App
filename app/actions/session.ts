@@ -4,70 +4,71 @@ import { cookies } from "next/headers"
 import { sql } from "@/lib/db"
 import crypto from "crypto"
 
-export async function createSession(userId: string, companyId: string) {
-  await sql`
-    DELETE FROM sessions 
-    WHERE user_id = ${userId}
-  `
-
+export async function createSession(userId: number) {
   const sessionToken = crypto.randomBytes(32).toString("hex")
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
+  const expiresAt = new Date()
+  expiresAt.setHours(expiresAt.getHours() + 12) // 12 hour session
 
+  // Delete any existing sessions for this user (single session per user)
   await sql`
-    INSERT INTO sessions (user_id, company_id, token, expires_at)
-    VALUES (${userId}, ${companyId}, ${sessionToken}, ${expiresAt})
+    DELETE FROM sessions WHERE user_id = ${userId}
   `
 
-  const cookieStore = await cookies()
-  cookieStore.set("session_token", sessionToken, {
+  // Create new session
+  const result = await sql`
+    INSERT INTO sessions (user_id, token, expires_at)
+    VALUES (${userId}, ${sessionToken}, ${expiresAt})
+    RETURNING id
+  `
+
+  const sessionId = result[0].id
+
+  // Set cookie
+  cookies().set("session_id", sessionId.toString(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     expires: expiresAt,
-    path: "/",
   })
+
+  return sessionId
 }
 
 export async function getSession() {
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get("session_token")?.value
+  const sessionId = cookies().get("session_id")?.value
 
-  if (!sessionToken) {
+  if (!sessionId) {
     return null
   }
 
-  const sessions = await sql`
-    SELECT s.*, u.name, u.email, u.is_admin, u.role
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token = ${sessionToken}
-    AND s.expires_at > NOW()
-  `
-
-  if (sessions.length === 0) {
-    return null
-  }
-
-  return sessions[0]
-}
-
-export async function getCurrentUser() {
   try {
-    const session = await getSession()
-    if (!session) {
+    const sessions = await sql`
+      SELECT s.id, s.user_id, s.expires_at as expires, s.token as session_token, 
+             u.name, u.email, u.is_admin, u.role, u.company_id
+      FROM sessions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.id = ${sessionId} AND s.expires_at > NOW()
+    `
+
+    if (sessions.length === 0) {
       return null
     }
 
-    return {
-      id: session.user_id,
-      name: session.name,
-      email: session.email,
-      is_admin: session.is_admin,
-      role: session.role,
-      company_id: session.company_id,
-    }
+    return sessions[0]
   } catch (error) {
-    console.error("Error getting current user:", error)
+    console.error("Error getting session:", error)
     return null
   }
+}
+
+export async function deleteSession() {
+  const sessionId = cookies().get("session_id")?.value
+
+  if (sessionId) {
+    await sql`
+      DELETE FROM sessions WHERE id = ${sessionId}
+    `
+  }
+
+  cookies().delete("session_id")
 }
