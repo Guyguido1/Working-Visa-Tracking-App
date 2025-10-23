@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import type React from "react"
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+import { useEffect } from "react"
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Set theme on mount
+    // Get theme from localStorage or default to light
     const savedTheme = localStorage.getItem("theme") || "light"
     document.documentElement.setAttribute("data-theme", savedTheme)
   }, [])

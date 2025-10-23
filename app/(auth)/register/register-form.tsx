@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useFormState } from "react-dom"
 import { registerCompanyAdmin, type RegisterFormState } from "./actions"
 import { Eye, EyeOff } from "lucide-react"
 
 const initialState: RegisterFormState = {}
 
 export default function RegisterForm() {
-  const [state, formAction, isPending] = useActionState(registerCompanyAdmin, initialState)
+  const [state, formAction, isPending] = useFormState(registerCompanyAdmin, initialState)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
@@ -28,21 +28,21 @@ export default function RegisterForm() {
 
   return (
     <form action={formAction} className="space-y-4">
-      {/* Form-level error message - Added optional chaining */}
+      {/* Form-level error message */}
       {state?.errors?._form && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
           <p>{state.errors._form[0]}</p>
         </div>
       )}
 
-      {/* Success message - Added optional chaining */}
+      {/* Success message */}
       {state?.success && state?.message && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative dark:bg-green-900/30 dark:border-green-800 dark:text-green-400">
           <p>{state.message}</p>
         </div>
       )}
 
-      {/* Name field - Added optional chaining */}
+      {/* Name field */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Full Name
@@ -59,7 +59,7 @@ export default function RegisterForm() {
         {state?.errors?.name && <p className="text-xs text-red-500 mt-1">{state.errors.name[0]}</p>}
       </div>
 
-      {/* Email field - Added optional chaining */}
+      {/* Email field */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Email
@@ -76,7 +76,7 @@ export default function RegisterForm() {
         {state?.errors?.email && <p className="text-xs text-red-500 mt-1">{state.errors.email[0]}</p>}
       </div>
 
-      {/* Company Name field - Added optional chaining */}
+      {/* Company Name field */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="companyName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Company Name
@@ -93,7 +93,7 @@ export default function RegisterForm() {
         {state?.errors?.companyName && <p className="text-xs text-red-500 mt-1">{state.errors.companyName[0]}</p>}
       </div>
 
-      {/* Password field - Added optional chaining */}
+      {/* Password field */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Password
@@ -119,7 +119,7 @@ export default function RegisterForm() {
         {state?.errors?.password && <p className="text-xs text-red-500 mt-1">{state.errors.password[0]}</p>}
       </div>
 
-      {/* Confirm Password field - Added optional chaining */}
+      {/* Confirm Password field */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Confirm Password
