@@ -5,7 +5,7 @@ import Link from "next/link"
 
 export function SplashPage() {
   return (
-    <div className="min-h-screen bg-blue-50 text-gray-900">
+    <div className="min-h-screen bg-blue-100 text-gray-900">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
@@ -42,7 +42,7 @@ export function SplashPage() {
       {/* Features Sections in Two Columns */}
       <div className="flex flex-col md:flex-row">
         {/* How It Works Section */}
-        <section className="bg-blue-50 py-16 w-full md:w-1/2">
+        <section className="bg-blue-100 py-16 w-full md:w-1/2">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">How It Works</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -68,9 +68,9 @@ export function SplashPage() {
                   description: "Build client relationships with timely birthday greetings",
                 },
               ].map((item, index) => (
-                <div key={index} className="bg-blue-50 p-4 rounded-lg">
+                <div key={index} className="bg-blue-100 p-4 rounded-lg">
                   <div className="flex items-start">
-                    <div className="bg-blue-100 p-3 rounded-full mr-3">{item.icon}</div>
+                    <div className="bg-blue-200 p-3 rounded-full mr-3">{item.icon}</div>
                     <div>
                       <h3 className="text-lg font-semibold mb-1 text-gray-900">{item.title}</h3>
                       <p className="text-gray-600 text-sm">{item.description}</p>
@@ -83,7 +83,7 @@ export function SplashPage() {
         </section>
 
         {/* Why VisaPilot Section */}
-        <section className="py-16 w-full md:w-1/2 bg-blue-50">
+        <section className="py-16 w-full md:w-1/2 bg-blue-100">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">Why VisaPilot</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -110,9 +110,9 @@ export function SplashPage() {
                   description: "Stay compliant with visa regulations and requirements across different countries",
                 },
               ].map((item, index) => (
-                <div key={index} className="bg-blue-50 p-4 rounded-lg">
+                <div key={index} className="bg-blue-100 p-4 rounded-lg">
                   <div className="flex items-start">
-                    <div className="bg-blue-100 p-3 rounded-full mr-3">{item.icon}</div>
+                    <div className="bg-blue-200 p-3 rounded-full mr-3">{item.icon}</div>
                     <div>
                       <h3 className="text-lg font-semibold mb-1 text-gray-900">{item.title}</h3>
                       <p className="text-gray-600 text-sm">{item.description}</p>
