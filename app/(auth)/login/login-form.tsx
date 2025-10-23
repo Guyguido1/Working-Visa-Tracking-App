@@ -1,30 +1,16 @@
 "use client"
 
 import { useFormState } from "react-dom"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { login } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-const initialState = {
-  errors: {},
-  message: "",
-}
-
-export function LoginForm() {
-  const [state, formAction] = useFormState(login, initialState)
-  const router = useRouter()
-
-  useEffect(() => {
-    if (state?.redirectTo) {
-      router.push(state.redirectTo)
-    }
-  }, [state?.redirectTo, router])
+export default function LoginForm() {
+  const [state, formAction, isPending] = useFormState(login, null)
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="space-y-4">
       <div>
         <Label htmlFor="email" className="text-white">
           Email
@@ -33,15 +19,11 @@ export function LoginForm() {
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
           required
-          className="mt-1 bg-white text-gray-900 border-gray-300"
+          className="bg-white text-gray-900 border-blue-700"
+          disabled={isPending}
         />
-        {state?.errors?.email && (
-          <p className="mt-1 text-sm text-red-200 bg-red-900/30 p-2 rounded">{state.errors.email[0]}</p>
-        )}
       </div>
-
       <div>
         <Label htmlFor="password" className="text-white">
           Password
@@ -50,23 +32,16 @@ export function LoginForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
           required
-          className="mt-1 bg-white text-gray-900 border-gray-300"
+          className="bg-white text-gray-900 border-blue-700"
+          disabled={isPending}
         />
-        {state?.errors?.password && (
-          <p className="mt-1 text-sm text-red-200 bg-red-900/30 p-2 rounded">{state.errors.password[0]}</p>
-        )}
       </div>
-
-      {state?.message && (
-        <div className="rounded-md bg-red-900/30 p-4">
-          <p className="text-sm text-red-200">{state.message}</p>
-        </div>
+      {state?.error && (
+        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">{state.error}</div>
       )}
-
-      <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white">
-        Sign in
+      <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white" disabled={isPending}>
+        {isPending ? "Signing in..." : "Sign in"}
       </Button>
     </form>
   )
