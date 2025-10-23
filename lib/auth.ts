@@ -1,76 +1,56 @@
 import { cookies } from "next/headers"
-import { sql } from "@vercel/postgres"
-import bcrypt from "bcryptjs"
+import { sql } from "@/lib/db"
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10)
-}
+export async function getCompanyIdFromSession(): Promise<number | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get("session_token")?.value
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword)
-}
+    if (!sessionToken) {
+      return null
+    }
 
-export async function createSession(userId: number, companyId: number) {
-  const cookieStore = await cookies()
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+    const sessions = await sql`
+      SELECT company_id 
+      FROM sessions 
+      WHERE token = ${sessionToken} 
+      AND expires_at > NOW()
+    `
 
-  // Delete any existing sessions for this user
-  await sql`
-    DELETE FROM sessions 
-    WHERE user_id = ${userId}
-  `
+    if (sessions.length === 0) {
+      return null
+    }
 
-  // Create new session
-  const result = await sql`
-    INSERT INTO sessions (user_id, company_id, expires_at)
-    VALUES (${userId}, ${companyId}, ${expiresAt})
-    RETURNING id
-  `
-
-  const sessionId = result.rows[0].id
-
-  // Set session cookie
-  cookieStore.set("session", sessionId.toString(), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: expiresAt,
-    path: "/",
-  })
-
-  return sessionId
-}
-
-export async function getSession() {
-  const cookieStore = await cookies()
-  const sessionId = cookieStore.get("session")?.value
-
-  if (!sessionId) {
+    return sessions[0].company_id
+  } catch (error) {
+    console.error("Error getting company ID from session:", error)
     return null
   }
-
-  const result = await sql`
-    SELECT s.*, u.email, u.role, u.company_id
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.id = ${sessionId}
-    AND s.expires_at > NOW()
-  `
-
-  if (result.rows.length === 0) {
-    return null
-  }
-
-  return result.rows[0]
 }
 
-export async function deleteSession() {
-  const cookieStore = await cookies()
-  const sessionId = cookieStore.get("session")?.value
+export async function getUserIdFromSession(): Promise<number | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get("session_token")?.value
 
-  if (sessionId) {
-    await sql`DELETE FROM sessions WHERE id = ${sessionId}`
+    if (!sessionToken) {
+      return null
+    }
+
+    const sessions = await sql`
+      SELECT user_id 
+      FROM sessions 
+      WHERE token = ${sessionToken} 
+      AND expires_at > NOW()
+    `
+
+    if (sessions.length === 0) {
+      return null
+    }
+
+    return sessions[0].user_id
+  } catch (error) {
+    console.error("Error getting user ID from session:", error)
+    return null
   }
-
-  cookieStore.delete("session")
 }

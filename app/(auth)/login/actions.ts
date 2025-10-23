@@ -1,67 +1,100 @@
 "use server"
 
 import { z } from "zod"
-import { sql } from "@vercel/postgres"
-import { verifyPassword, createSession } from "@/lib/auth"
+import bcrypt from "bcryptjs"
+import { cookies } from "next/headers"
+import { sql } from "@/lib/db"
+import crypto from "crypto"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 })
 
-export async function loginUser(prevState: any, formData: FormData) {
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
+export type LoginFormState = {
+  errors?: {
+    email?: string[]
+    password?: string[]
+    _form?: string[]
+  }
+  success?: boolean
+}
 
-  const validation = loginSchema.safeParse({ email, password })
+export async function loginUser(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
+  const validatedFields = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  })
 
-  if (!validation.success) {
+  if (!validatedFields.success) {
     return {
-      errors: validation.error.flatten().fieldErrors,
-      message: "Invalid input",
+      errors: validatedFields.error.flatten().fieldErrors,
     }
   }
 
+  const { email, password } = validatedFields.data
+
   try {
     // Find user by email
-    const result = await sql`
-      SELECT id, email, password, role, company_id
-      FROM users
+    const users = await sql`
+      SELECT id, email, password, company_id, is_admin, role 
+      FROM users 
       WHERE email = ${email}
     `
 
-    if (result.rows.length === 0) {
+    if (users.length === 0) {
       return {
-        errors: {},
-        message: "Invalid email or password",
+        errors: {
+          _form: ["Invalid email or password"],
+        },
       }
     }
 
-    const user = result.rows[0]
+    const user = users[0]
 
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.password)
+    const passwordMatch = await bcrypt.compare(password, user.password)
 
-    if (!isValidPassword) {
+    if (!passwordMatch) {
       return {
-        errors: {},
-        message: "Invalid email or password",
+        errors: {
+          _form: ["Invalid email or password"],
+        },
       }
     }
 
-    // Create session
-    await createSession(user.id, user.company_id)
+    // Delete any existing sessions for this user (single session per user)
+    await sql`
+      DELETE FROM sessions 
+      WHERE user_id = ${user.id}
+    `
 
-    return {
-      errors: {},
-      message: "",
-      redirectTo: "/dashboard",
-    }
+    // Create new session
+    const sessionToken = crypto.randomBytes(32).toString("hex")
+    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+
+    await sql`
+      INSERT INTO sessions (user_id, company_id, token, expires_at)
+      VALUES (${user.id}, ${user.company_id}, ${sessionToken}, ${expiresAt})
+    `
+
+    // Set session cookie
+    const cookieStore = await cookies()
+    cookieStore.set("session_token", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: expiresAt,
+      path: "/",
+    })
+
+    return { success: true }
   } catch (error) {
     console.error("Login error:", error)
     return {
-      errors: {},
-      message: "An error occurred during login. Please try again.",
+      errors: {
+        _form: ["An error occurred during login. Please try again."],
+      },
     }
   }
 }

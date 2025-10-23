@@ -1,88 +1,97 @@
 "use server"
 
 import { z } from "zod"
-import { sql } from "@vercel/postgres"
-import { hashPassword, createSession } from "@/lib/auth"
+import bcrypt from "bcryptjs"
+import { sql } from "@/lib/db"
 
 const registerSchema = z
   .object({
-    companyName: z.string().min(1, "Company name is required"),
+    name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
+    companyName: z.string().min(1, "Company name is required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
   })
 
-export async function registerUser(prevState: any, formData: FormData) {
-  const companyName = formData.get("companyName") as string
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-  const confirmPassword = formData.get("confirmPassword") as string
+export type RegisterFormState = {
+  errors?: {
+    name?: string[]
+    email?: string[]
+    companyName?: string[]
+    password?: string[]
+    confirmPassword?: string[]
+    _form?: string[]
+  }
+  success?: boolean
+  message?: string
+}
 
-  const validation = registerSchema.safeParse({
-    companyName,
-    email,
-    password,
-    confirmPassword,
+export async function registerCompanyAdmin(
+  prevState: RegisterFormState | undefined,
+  formData: FormData,
+): Promise<RegisterFormState> {
+  const validatedFields = registerSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    companyName: formData.get("companyName"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   })
 
-  if (!validation.success) {
+  if (!validatedFields.success) {
     return {
-      errors: validation.error.flatten().fieldErrors,
-      message: "Invalid input",
+      errors: validatedFields.error.flatten().fieldErrors,
     }
   }
 
+  const { name, email, companyName, password } = validatedFields.data
+
   try {
     // Check if email already exists
-    const existingUser = await sql`
+    const existingUsers = await sql`
       SELECT id FROM users WHERE email = ${email}
     `
 
-    if (existingUser.rows.length > 0) {
+    if (existingUsers.length > 0) {
       return {
-        errors: { email: ["Email already registered"] },
-        message: "Email already registered",
+        errors: {
+          _form: ["An account with this email already exists"],
+        },
       }
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     // Create company
-    const companyResult = await sql`
+    const companies = await sql`
       INSERT INTO companies (name)
       VALUES (${companyName})
       RETURNING id
     `
 
-    const companyId = companyResult.rows[0].id
+    const companyId = companies[0].id
 
-    // Hash password
-    const hashedPassword = await hashPassword(password)
-
-    // Create user
-    const userResult = await sql`
-      INSERT INTO users (email, password, role, company_id)
-      VALUES (${email}, ${hashedPassword}, 'admin', ${companyId})
-      RETURNING id
+    // Create admin user
+    await sql`
+      INSERT INTO users (name, email, password, company_id, is_admin, role)
+      VALUES (${name}, ${email}, ${hashedPassword}, ${companyId}, true, 'admin')
     `
 
-    const userId = userResult.rows[0].id
-
-    // Create session
-    await createSession(userId, companyId)
-
     return {
-      errors: {},
-      message: "",
-      redirectTo: "/dashboard",
+      success: true,
+      message: "Registration successful! Please log in.",
     }
   } catch (error) {
     console.error("Registration error:", error)
     return {
-      errors: {},
-      message: "An error occurred during registration. Please try again.",
+      errors: {
+        _form: ["An error occurred during registration. Please try again."],
+      },
     }
   }
 }
