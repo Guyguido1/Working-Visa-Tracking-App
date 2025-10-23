@@ -14,7 +14,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 219 100% 96%; /* Light blue background */
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -91,6 +91,13 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Apply light blue background to the entire site in light mode */
+[data-theme="light"] body,
+[data-theme="light"] .bg-base-100,
+[data-theme="light"] .bg-base-200 {
+  background-color: #dbeafe !important; /* Light blue (blue-100) */
 }
 
 /* Make input and select borders dark grey in light mode for better visibility */
