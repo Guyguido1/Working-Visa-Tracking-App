@@ -1,27 +1,35 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { verifyPassword } from "@/lib/auth"
-import { createSession } from "@/app/actions/session"
+import { cookies } from "next/headers"
+import bcryptjs from "bcryptjs"
+import { z } from "zod"
+
+const LoginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+})
 
 export async function loginUser(prevState: any, formData: FormData) {
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
+  const validatedFields = LoginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  })
 
-  if (!email || !password) {
+  if (!validatedFields.success) {
     return {
-      errors: {
-        email: !email ? "Email is required" : undefined,
-        password: !password ? "Password is required" : undefined,
-      },
-      message: "Please fill in all fields",
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Please correct the errors in the form.",
     }
   }
 
+  const { email, password } = validatedFields.data
+
   try {
-    // Find user by email
     const users = await sql`
-      SELECT * FROM users WHERE email = ${email}
+      SELECT id, company_id, name, email, password_hash, is_admin, role
+      FROM users
+      WHERE email = ${email}
     `
 
     if (users.length === 0) {
@@ -33,25 +41,34 @@ export async function loginUser(prevState: any, formData: FormData) {
 
     const user = users[0]
 
-    // Verify password
-    const isValidPassword = await verifyPassword(password, user.password)
+    const passwordMatch = await bcryptjs.compare(password, user.password_hash)
 
-    if (!isValidPassword) {
+    if (!passwordMatch) {
       return {
         errors: {},
         message: "Invalid email or password",
       }
     }
 
-    // Create session
-    await createSession(user.id)
+    const sessionId = crypto.randomUUID()
+    const sessionToken = crypto.randomUUID()
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000)
 
-    // Return redirect instead of calling redirect() directly
-    return {
-      errors: {},
-      message: "",
-      redirectTo: "/dashboard",
-    }
+    await sql`
+      INSERT INTO sessions (id, user_id, expires, session_token)
+      VALUES (${sessionId}, ${user.id}, ${expires}, ${sessionToken})
+    `
+
+    cookies().set({
+      name: "session_id",
+      value: sessionId,
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      expires,
+    })
+
+    return { redirectTo: "/dashboard" }
   } catch (error) {
     console.error("Login error:", error)
     return {

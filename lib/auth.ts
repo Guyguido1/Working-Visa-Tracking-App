@@ -1,13 +1,13 @@
-import bcrypt from "bcryptjs"
+import bcryptjs from "bcryptjs"
 import { cookies } from "next/headers"
 import { sql } from "./db"
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10)
+  return bcryptjs.hash(password, 10)
 }
 
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword)
+  return bcryptjs.compare(password, hashedPassword)
 }
 
 export async function getSession() {
