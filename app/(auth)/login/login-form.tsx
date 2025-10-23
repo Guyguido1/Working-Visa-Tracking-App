@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useActionState } from "react"
+import { useFormState } from "react-dom"
 import { useRouter } from "next/navigation"
 import { loginUser } from "./actions"
 import { AlertCircle } from "lucide-react"
@@ -13,7 +13,7 @@ const initialState = {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useActionState(loginUser, initialState)
+  const [state, formAction, isPending] = useFormState(loginUser, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Handle redirect after successful login - Added null check
@@ -86,11 +86,11 @@ export default function LoginForm() {
       <div>
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isPending || isSubmitting}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           style={{ color: "white" }}
         >
-          {isSubmitting ? "Logging in..." : "Login"}
+          {isPending || isSubmitting ? "Logging in..." : "Login"}
         </button>
       </div>
     </form>
