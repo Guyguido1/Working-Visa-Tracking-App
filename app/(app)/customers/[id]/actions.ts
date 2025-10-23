@@ -1,14 +1,17 @@
 "use server"
 
-import { sql } from "@/lib/db"
+import { sql } from "@vercel/postgres"
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/app/actions/session"
+import { getSession } from "@/lib/auth"
 
 export type Note = {
   id: number
   customer_id: number
+  user_id: number
   content: string
   created_at: string
+  company_id: number
+  user_email: string
   isOptimistic?: boolean
 }
 
@@ -22,35 +25,22 @@ export type CustomerFile = {
 }
 
 export async function addNote(customerId: number, content: string) {
-  // ✅ TENANT ISOLATION: Get user's company_id from session
   const session = await getSession()
+
   if (!session) {
-    return { success: false, error: "Unauthorized" }
+    throw new Error("Unauthorized")
   }
 
   try {
-    // ✅ TENANT ISOLATION: Verify customer belongs to user's company
-    const customerCheck = await sql`
-      SELECT id FROM customers 
-      WHERE id = ${customerId} AND company_id = ${session.company_id}
+    await sql`
+      INSERT INTO customer_notes (customer_id, user_id, content, company_id)
+      VALUES (${customerId}, ${session.user_id}, ${content}, ${session.company_id})
     `
-
-    if (customerCheck.length === 0) {
-      return { success: false, error: "Customer not found or access denied" }
-    }
-
-    const result = await sql`
-      INSERT INTO customer_notes (customer_id, content)
-      VALUES (${customerId}, ${content})
-      RETURNING id
-    `
-
-    const noteId = result[0]?.id
 
     revalidatePath(`/customers/${customerId}`)
-    return { success: true, noteId }
+    return { success: true }
   } catch (error) {
-    console.error("Error adding note:", error)
+    console.error("Add note error:", error)
     return { success: false, error: "Failed to add note" }
   }
 }
@@ -114,8 +104,8 @@ export async function uploadFile(customerId: number, file: File) {
     const filePath = `/uploads/${customerId}/${Date.now()}-${filename}`
 
     await sql`
-      INSERT INTO customer_files (customer_id, filename, file_type, file_path)
-      VALUES (${customerId}, ${filename}, ${fileType}, ${filePath})
+      INSERT INTO customer_files (customer_id, filename, file_type, file_path, company_id)
+      VALUES (${customerId}, ${filename}, ${fileType}, ${filePath}, ${session.company_id})
     `
 
     revalidatePath(`/customers/${customerId}`)
@@ -210,13 +200,14 @@ export async function getCustomerDetails(customerId: number) {
     const notesData = await retryWithBackoff(async () => {
       try {
         const notesResult = await sql`
-          SELECT n.* FROM customer_notes n
-          JOIN customers c ON n.customer_id = c.id
-          WHERE n.customer_id = ${customerId}
-          AND c.company_id = ${session.company_id}
-          ORDER BY n.created_at DESC
+          SELECT cn.*, u.email as user_email
+          FROM customer_notes cn
+          JOIN users u ON cn.user_id = u.id
+          WHERE cn.customer_id = ${customerId}
+          AND cn.company_id = ${session.company_id}
+          ORDER BY cn.created_at DESC
         `
-        return notesResult
+        return notesResult.rows
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
         if (errorMessage.includes("Unexpected token") && errorMessage.includes("Too Many R")) {
@@ -265,5 +256,47 @@ export async function getCustomerDetails(customerId: number) {
     }
 
     return { success: false, error: "Failed to fetch customer details" }
+  }
+}
+
+export async function updateReportStatus(reportId: number, status: string) {
+  try {
+    const session = await getSession()
+    if (!session) {
+      throw new Error("Unauthorized")
+    }
+
+    await sql`
+      UPDATE reports 
+      SET status = ${status}, updated_at = NOW()
+      WHERE id = ${reportId}
+    `
+
+    revalidatePath(`/customers`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating report status:", error)
+    return { success: false, error: "Failed to update report status" }
+  }
+}
+
+export async function addReportNote(reportId: number, note: string) {
+  try {
+    const session = await getSession()
+    if (!session) {
+      throw new Error("Unauthorized")
+    }
+
+    await sql`
+      UPDATE reports 
+      SET note = ${note}, updated_at = NOW()
+      WHERE id = ${reportId}
+    `
+
+    revalidatePath(`/customers`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error adding report note:", error)
+    return { success: false, error: "Failed to add report note" }
   }
 }

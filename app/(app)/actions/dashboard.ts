@@ -1,206 +1,116 @@
 "use server"
 
-import { sql } from "@/lib/db"
+import { sql } from "@vercel/postgres"
+import { getSession } from "@/lib/auth"
 
-// Types
-export type Customer = {
-  id: number
-  company_id: number
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  passport_number: string
-  nationality: string
-  visa_type: string
-  expiry_date: string | null
-  application_date: string | null
-  date_of_birth: string | null
-  passport_expiry_date: string | null
-  created_at: string
-  updated_at: string
-}
+export async function getDashboardData(filters?: {
+  search?: string
+  visaType?: string
+  status?: string
+}) {
+  const session = await getSession()
 
-export type Report = {
-  id: number
-  customer_id: number
-  title: string
-  description: string
-  due_date: string
-  status: string
-  created_at: string
-  updated_at: string
-}
-
-export type CustomerWithReport = Customer & {
-  report?: Report
-}
-
-export type DashboardData = {
-  counts: {
-    totalCustomers: number
-    visaReportNotDue: number
-    reportsDue15Days: number
-    visaExpiring30Days: number
-    passportExpiring30Days: number
-    birthdays: number
-  }
-  categories: {
-    allCustomers: CustomerWithReport[]
-    visaReportNotDue: CustomerWithReport[]
-    reportsDue15Days: CustomerWithReport[]
-    visaExpiring30Days: CustomerWithReport[]
-    passportExpiring30Days: CustomerWithReport[]
-    birthdays: CustomerWithReport[]
-  }
-}
-
-function ensureDateString(date: Date | string | null | undefined): string | null {
-  if (!date) return null
-  if (date instanceof Date) {
-    return date.toISOString().split("T")[0]
-  }
-  return String(date)
-}
-
-export async function getDashboardStats(tenantId: number): Promise<DashboardData | { success: false; name: string }> {
-  if (!tenantId || typeof tenantId !== "number") {
-    return { success: false, name: "Missing company ID" }
+  if (!session) {
+    throw new Error("Unauthorized")
   }
 
-  // ✅ TENANT ISOLATION: All queries filter by company_id
-  const customersWithReports = await sql`
+  const today = new Date()
+  const thirtyDaysFromNow = new Date(today)
+  thirtyDaysFromNow.setDate(today.getDate() + 30)
+
+  let query = `
+    WITH latest_notes AS (
+      SELECT DISTINCT ON (rn.report_id)
+        rn.report_id,
+        rn.note,
+        rn.created_at
+      FROM report_notes rn
+      ORDER BY rn.report_id, rn.created_at DESC
+    )
     SELECT 
       c.*,
       r.id as report_id,
       r.title as report_title,
-      r.description as report_description,
-      r.due_date as report_due_date,
+      r.due_date,
       r.status as report_status,
-      r.created_at as report_created_at,
-      r.updated_at as report_updated_at
-    FROM 
-      customers c
-    LEFT JOIN (
-      SELECT DISTINCT ON (customer_id) *
-      FROM reports
-      ORDER BY customer_id, due_date DESC
-    ) r ON c.id = r.customer_id
-    WHERE 
-      c.company_id = ${tenantId}
+      r.note as legacy_note,
+      ln.note as latest_note
+    FROM customers c
+    LEFT JOIN reports r ON c.id = r.customer_id
+    LEFT JOIN latest_notes ln ON r.id = ln.report_id
+    WHERE c.company_id = $1
   `
 
-  const transformedCustomers: CustomerWithReport[] = customersWithReports.map((row) => {
-    const customer = {
-      id: row.id,
-      company_id: row.company_id,
-      first_name: row.first_name,
-      last_name: row.last_name,
-      email: row.email,
-      phone: row.phone,
-      passport_number: row.passport_number,
-      nationality: row.nationality,
-      visa_type: row.visa_type,
-      expiry_date: ensureDateString(row.expiry_date),
-      application_date: ensureDateString(row.application_date),
-      date_of_birth: ensureDateString(row.date_of_birth),
-      passport_expiry_date: ensureDateString(row.passport_expiry_date),
-      created_at: ensureDateString(row.created_at) || "",
-      updated_at: ensureDateString(row.updated_at) || "",
-    } as Customer
+  const params: any[] = [session.company_id]
+  let paramIndex = 2
 
-    if (row.report_id) {
-      customer.report = {
-        id: row.report_id,
-        customer_id: row.id,
-        title: row.report_title,
-        description: row.report_description,
-        due_date: ensureDateString(row.report_due_date) || "",
-        status: row.report_status,
-        created_at: ensureDateString(row.report_created_at) || "",
-        updated_at: ensureDateString(row.report_updated_at) || "",
-      }
+  if (filters?.search) {
+    query += ` AND (c.first_name ILIKE $${paramIndex} OR c.last_name ILIKE $${paramIndex} OR c.passport_number ILIKE $${paramIndex})`
+    params.push(`%${filters.search}%`)
+    paramIndex++
+  }
+
+  if (filters?.visaType) {
+    query += ` AND c.visa_type = $${paramIndex}`
+    params.push(filters.visaType)
+    paramIndex++
+  }
+
+  if (filters?.status) {
+    if (filters.status === "expiring_soon") {
+      query += ` AND (c.expiry_date <= $${paramIndex} OR c.passport_expiry_date <= $${paramIndex})`
+      params.push(thirtyDaysFromNow.toISOString())
+      paramIndex++
+    } else if (filters.status === "report_due") {
+      query += ` AND r.due_date <= $${paramIndex} AND r.status != 'completed'`
+      params.push(thirtyDaysFromNow.toISOString())
+      paramIndex++
     }
+  }
 
-    return customer
-  })
+  query += ` ORDER BY c.last_name, c.first_name`
 
-  const currentDate = new Date()
-  const in15Days = new Date()
-  in15Days.setDate(currentDate.getDate() + 15)
+  const result = await sql.query(query, params)
 
-  const in30Days = new Date()
-  in30Days.setDate(currentDate.getDate() + 30)
+  return result.rows
+}
 
-  const reportsDue15Days = transformedCustomers.filter(
-    (customer) =>
-      customer.report &&
-      customer.report.status === "pending" &&
-      customer.report.due_date &&
-      new Date(customer.report.due_date) <= in15Days &&
-      new Date(customer.report.due_date) >= currentDate,
-  )
+export async function getDashboardStats() {
+  const session = await getSession()
 
-  const visaExpiring30Days = transformedCustomers.filter(
-    (customer) =>
-      customer.expiry_date &&
-      new Date(customer.expiry_date) <= in30Days &&
-      new Date(customer.expiry_date) >= currentDate,
-  )
-
-  const passportExpiring30Days = transformedCustomers.filter(
-    (customer) =>
-      customer.passport_expiry_date &&
-      new Date(customer.passport_expiry_date) <= in30Days &&
-      new Date(customer.passport_expiry_date) >= currentDate,
-  )
+  if (!session) {
+    throw new Error("Unauthorized")
+  }
 
   const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(today.getDate() + 1)
+  const thirtyDaysFromNow = new Date(today)
+  thirtyDaysFromNow.setDate(today.getDate() + 30)
 
-  const todayMonth = today.getMonth()
-  const todayDate = today.getDate()
-  const tomorrowMonth = tomorrow.getMonth()
-  const tomorrowDate = tomorrow.getDate()
-
-  const birthdays = transformedCustomers.filter((customer) => {
-    if (!customer.date_of_birth) return false
-
-    const birth = new Date(customer.date_of_birth)
-    const birthMonth = birth.getMonth()
-    const birthDate = birth.getDate()
-
-    const isMatch =
-      (birthMonth === todayMonth && birthDate === todayDate) ||
-      (birthMonth === tomorrowMonth && birthDate === tomorrowDate)
-
-    return isMatch
-  })
-
-  const visaReportNotDue = transformedCustomers.filter(
-    (customer) =>
-      !reportsDue15Days.some((c) => c.id === customer.id) &&
-      !visaExpiring30Days.some((c) => c.id === customer.id) &&
-      !passportExpiring30Days.some((c) => c.id === customer.id),
-  )
+  const [totalCustomers, expiringVisas, expiringPassports, upcomingReports, upcomingBirthdays] = await Promise.all([
+    sql`SELECT COUNT(*) as count FROM customers WHERE company_id = ${session.company_id}`,
+    sql`SELECT COUNT(*) as count FROM customers WHERE company_id = ${session.company_id} AND expiry_date <= ${thirtyDaysFromNow.toISOString()} AND expiry_date >= ${today.toISOString()}`,
+    sql`SELECT COUNT(*) as count FROM customers WHERE company_id = ${session.company_id} AND passport_expiry_date <= ${thirtyDaysFromNow.toISOString()} AND passport_expiry_date >= ${today.toISOString()}`,
+    sql`SELECT COUNT(*) as count FROM reports r JOIN customers c ON r.customer_id = c.id WHERE c.company_id = ${session.company_id} AND r.due_date <= ${thirtyDaysFromNow.toISOString()} AND r.status != 'completed'`,
+    sql`
+      SELECT COUNT(*) as count 
+      FROM customers 
+      WHERE company_id = ${session.company_id}
+      AND date_of_birth IS NOT NULL
+      AND (
+        (EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE) 
+         AND EXTRACT(DAY FROM date_of_birth) >= EXTRACT(DAY FROM CURRENT_DATE))
+        OR 
+        (EXTRACT(MONTH FROM date_of_birth) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '30 days')
+         AND EXTRACT(DAY FROM date_of_birth) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '30 days'))
+      )
+    `,
+  ])
 
   return {
-    counts: {
-      totalCustomers: transformedCustomers.length,
-      visaReportNotDue: visaReportNotDue.length,
-      reportsDue15Days: reportsDue15Days.length,
-      visaExpiring30Days: visaExpiring30Days.length,
-      passportExpiring30Days: passportExpiring30Days.length,
-      birthdays: birthdays.length,
-    },
-    categories: {
-      allCustomers: transformedCustomers,
-      visaReportNotDue,
-      reportsDue15Days,
-      visaExpiring30Days,
-      passportExpiring30Days,
-      birthdays,
-    },
+    totalCustomers: Number.parseInt(totalCustomers.rows[0].count),
+    expiringVisas: Number.parseInt(expiringVisas.rows[0].count),
+    expiringPassports: Number.parseInt(expiringPassports.rows[0].count),
+    upcomingReports: Number.parseInt(upcomingReports.rows[0].count),
+    upcomingBirthdays: Number.parseInt(upcomingBirthdays.rows[0].count),
   }
 }
