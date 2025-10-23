@@ -1,8 +1,8 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { verifyPassword } from "@/lib/auth"
-import { createSession } from "@/app/actions/session"
+import bcrypt from "bcryptjs"
+import { cookies } from "next/headers"
 import { z } from "zod"
 
 const LoginSchema = z.object({
@@ -20,7 +20,7 @@ export type LoginFormState = {
   redirectTo?: string
 }
 
-export async function loginUser(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
+export async function loginUser(prevState: any, formData: FormData): Promise<LoginFormState> {
   const validatedFields = LoginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -53,7 +53,7 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
 
     const user = users[0]
 
-    const isValidPassword = await verifyPassword(password, user.password_hash)
+    const isValidPassword = await bcrypt.compare(password, user.password_hash)
 
     if (!isValidPassword) {
       return {
@@ -64,7 +64,29 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
       }
     }
 
-    await createSession(user.id, user.company_id)
+    // Delete existing sessions for this user
+    await sql`
+      DELETE FROM sessions WHERE user_id = ${user.id}
+    `
+
+    // Create new session
+    const sessionId = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+
+    await sql`
+      INSERT INTO sessions (id, user_id, company_id, expires_at)
+      VALUES (${sessionId}, ${user.id}, ${user.company_id}, ${expiresAt})
+    `
+
+    // Set cookie
+    const cookieStore = await cookies()
+    cookieStore.set("session_id", sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: expiresAt,
+      path: "/",
+    })
 
     return {
       redirectTo: "/dashboard",
