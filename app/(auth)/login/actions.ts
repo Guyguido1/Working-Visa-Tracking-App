@@ -1,9 +1,7 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { verifyPassword } from "@/lib/auth"
-import { createSession } from "@/app/actions/session"
-import { redirect } from "next/navigation"
+import { verifyPassword, createSession } from "@/lib/auth"
 import { z } from "zod"
 
 const LoginSchema = z.object({
@@ -18,9 +16,10 @@ export type LoginFormState = {
     _form?: string[]
   }
   message?: string
+  redirectTo?: string
 }
 
-export async function login(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
+export async function loginUser(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
   const validatedFields = LoginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -47,6 +46,7 @@ export async function login(prevState: LoginFormState | undefined, formData: For
         errors: {
           _form: ["Invalid email or password"],
         },
+        message: "Invalid email or password",
       }
     }
 
@@ -59,18 +59,22 @@ export async function login(prevState: LoginFormState | undefined, formData: For
         errors: {
           _form: ["Invalid email or password"],
         },
+        message: "Invalid email or password",
       }
     }
 
     await createSession(user.id, user.company_id)
+
+    return {
+      redirectTo: "/dashboard",
+    }
   } catch (error) {
     console.error("Login error:", error)
     return {
       errors: {
         _form: ["An error occurred during login. Please try again."],
       },
+      message: "An error occurred during login. Please try again.",
     }
   }
-
-  redirect("/dashboard")
 }
