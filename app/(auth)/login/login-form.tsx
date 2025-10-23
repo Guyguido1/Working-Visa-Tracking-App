@@ -1,6 +1,8 @@
 "use client"
 
 import { useFormState } from "react-dom"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { login } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +10,12 @@ import { Label } from "@/components/ui/label"
 
 export default function LoginForm() {
   const [state, formAction, isPending] = useFormState(login, null)
+  const router = useRouter()
+
+  useEffect(() => {
+    // If login is successful (no error returned), the server action will handle the redirect
+    // This is just for handling any client-side state if needed
+  }, [state, router])
 
   return (
     <form action={formAction} className="space-y-4">
@@ -19,6 +27,7 @@ export default function LoginForm() {
           id="email"
           name="email"
           type="email"
+          autoComplete="email"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
@@ -32,6 +41,7 @@ export default function LoginForm() {
           id="password"
           name="password"
           type="password"
+          autoComplete="current-password"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}

@@ -6,7 +6,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col justify-center items-center bg-blue-950 text-white px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-3">VisaPilot</h1>
+          <Link href="/">
+            <h1 className="text-3xl font-bold text-white mb-3 hover:text-blue-400 transition-colors cursor-pointer">
+              VisaPilot
+            </h1>
+          </Link>
           <h2 className="text-xl font-medium text-white mb-2">Manage Your Visa Clients with Clarity & Confidence</h2>
           <p className="text-white">A secure, all-in-one platform for visa agencies to track customers</p>
         </div>

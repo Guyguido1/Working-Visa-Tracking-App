@@ -1,6 +1,8 @@
 "use client"
 
 import { useFormState } from "react-dom"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { register } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,17 +10,29 @@ import { Label } from "@/components/ui/label"
 
 export default function RegisterForm() {
   const [state, formAction, isPending] = useFormState(register, null)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state?.success) {
+      // Redirect to login page after successful registration
+      const timer = setTimeout(() => {
+        router.push("/login")
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [state, router])
 
   return (
     <form action={formAction} className="space-y-4">
       <div>
-        <Label htmlFor="companyName" className="text-white">
-          Company Name
+        <Label htmlFor="name" className="text-white">
+          Full Name
         </Label>
         <Input
-          id="companyName"
-          name="companyName"
+          id="name"
+          name="name"
           type="text"
+          autoComplete="name"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
@@ -32,6 +46,21 @@ export default function RegisterForm() {
           id="email"
           name="email"
           type="email"
+          autoComplete="email"
+          required
+          className="bg-white text-gray-900 border-blue-700"
+          disabled={isPending}
+        />
+      </div>
+      <div>
+        <Label htmlFor="companyName" className="text-white">
+          Company Name
+        </Label>
+        <Input
+          id="companyName"
+          name="companyName"
+          type="text"
+          autoComplete="organization"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
@@ -45,6 +74,7 @@ export default function RegisterForm() {
           id="password"
           name="password"
           type="password"
+          autoComplete="new-password"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
@@ -58,6 +88,7 @@ export default function RegisterForm() {
           id="confirmPassword"
           name="confirmPassword"
           type="password"
+          autoComplete="new-password"
           required
           className="bg-white text-gray-900 border-blue-700"
           disabled={isPending}
