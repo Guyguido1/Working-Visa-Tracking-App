@@ -17,7 +17,6 @@ export default function RegisterForm() {
   // Handle successful registration
   useEffect(() => {
     if (state?.success && state?.message?.includes("Registration successful")) {
-      // Use setTimeout to allow the component to render before redirecting
       const timer = setTimeout(() => {
         router.push("/login?success=true&message=Registration+successful.+Please+log+in.")
       }, 2000)
@@ -28,21 +27,18 @@ export default function RegisterForm() {
 
   return (
     <form action={formAction} className="space-y-4">
-      {/* Form-level error message - Added optional chaining */}
       {state?.errors?._form && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
           <p>{state.errors._form[0]}</p>
         </div>
       )}
 
-      {/* Success message - Added optional chaining */}
       {state?.success && state?.message && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative dark:bg-green-900/30 dark:border-green-800 dark:text-green-400">
           <p>{state.message}</p>
         </div>
       )}
 
-      {/* Name field - Added optional chaining */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="name" className="text-sm font-medium text-white">
           Full Name
@@ -51,6 +47,8 @@ export default function RegisterForm() {
           id="name"
           name="name"
           type="text"
+          autoComplete="off"
+          defaultValue=""
           className={`px-3 py-2 bg-white text-black border ${
             state?.errors?.name ? "border-red-500" : "border-gray-300"
           } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -59,7 +57,6 @@ export default function RegisterForm() {
         {state?.errors?.name && <p className="text-xs text-red-500 mt-1">{state.errors.name[0]}</p>}
       </div>
 
-      {/* Email field - Added optional chaining */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="email" className="text-sm font-medium text-white">
           Email
@@ -68,6 +65,8 @@ export default function RegisterForm() {
           id="email"
           name="email"
           type="email"
+          autoComplete="off"
+          defaultValue=""
           className={`px-3 py-2 bg-white text-black border ${
             state?.errors?.email ? "border-red-500" : "border-gray-300"
           } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -76,7 +75,6 @@ export default function RegisterForm() {
         {state?.errors?.email && <p className="text-xs text-red-500 mt-1">{state.errors.email[0]}</p>}
       </div>
 
-      {/* Company Name field - Added optional chaining */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="companyName" className="text-sm font-medium text-white">
           Company Name
@@ -85,6 +83,8 @@ export default function RegisterForm() {
           id="companyName"
           name="companyName"
           type="text"
+          autoComplete="off"
+          defaultValue=""
           className={`px-3 py-2 bg-white text-black border ${
             state?.errors?.companyName ? "border-red-500" : "border-gray-300"
           } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -93,7 +93,6 @@ export default function RegisterForm() {
         {state?.errors?.companyName && <p className="text-xs text-red-500 mt-1">{state.errors.companyName[0]}</p>}
       </div>
 
-      {/* Password field - Added optional chaining */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="password" className="text-sm font-medium text-white">
           Password
@@ -103,6 +102,8 @@ export default function RegisterForm() {
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
+            autoComplete="off"
+            defaultValue=""
             className={`px-3 py-2 bg-white text-black border ${
               state?.errors?.password ? "border-red-500" : "border-gray-300"
             } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full`}
@@ -119,7 +120,6 @@ export default function RegisterForm() {
         {state?.errors?.password && <p className="text-xs text-red-500 mt-1">{state.errors.password[0]}</p>}
       </div>
 
-      {/* Confirm Password field - Added optional chaining */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="confirmPassword" className="text-sm font-medium text-white">
           Confirm Password
@@ -129,6 +129,8 @@ export default function RegisterForm() {
             id="confirmPassword"
             name="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
+            autoComplete="off"
+            defaultValue=""
             className={`px-3 py-2 bg-white text-black border ${
               state?.errors?.confirmPassword ? "border-red-500" : "border-gray-300"
             } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full`}
@@ -147,7 +149,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Submit button */}
       <div className="mt-6">
         <button
           type="submit"

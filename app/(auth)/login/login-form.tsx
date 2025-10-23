@@ -16,7 +16,7 @@ export default function LoginForm() {
   const [state, formAction] = useFormState(loginUser, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Handle redirect after successful login - Added null check
+  // Handle redirect after successful login
   useEffect(() => {
     if (state && state.redirectTo) {
       router.push(state.redirectTo)
@@ -51,8 +51,9 @@ export default function LoginForm() {
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete="off"
           required
+          defaultValue=""
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
         />
         {state.errors?.email && (
@@ -70,8 +71,9 @@ export default function LoginForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="off"
           required
+          defaultValue=""
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white text-black"
         />
         {state.errors?.password && (

@@ -304,7 +304,7 @@ export default function AddCustomer() {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="Enter first name"
-                  className={`input input-bordered w-full ${errors.firstName ? "input-error" : ""}`}
+                  className={`input input-bordered w-full px-5 ${errors.firstName ? "input-error" : ""}`}
                 />
                 {errors.firstName && (
                   <label className="label">
@@ -324,7 +324,7 @@ export default function AddCustomer() {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Enter last name"
-                  className={`input input-bordered w-full ${errors.lastName ? "input-error" : ""}`}
+                  className={`input input-bordered w-full px-5 ${errors.lastName ? "input-error" : ""}`}
                 />
                 {errors.lastName && (
                   <label className="label">
@@ -344,7 +344,7 @@ export default function AddCustomer() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter email address"
-                  className={`input input-bordered w-full ${errors.email ? "input-error" : ""}`}
+                  className={`input input-bordered w-full px-5 ${errors.email ? "input-error" : ""}`}
                 />
                 {errors.email && (
                   <label className="label">
@@ -364,7 +364,7 @@ export default function AddCustomer() {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="Enter phone number"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full px-5"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export default function AddCustomer() {
                   name="nationality"
                   value={formData.nationality}
                   onChange={handleChange}
-                  className="select select-bordered w-full"
+                  className="select select-bordered w-full px-5"
                 >
                   <option value="">Select nationality</option>
                   <option value="USA">United States</option>
@@ -423,7 +423,7 @@ export default function AddCustomer() {
                   value={formData.passportNumber}
                   onChange={handleChange}
                   placeholder="Enter passport number"
-                  className={`input input-bordered w-full ${errors.passportNumber ? "input-error" : ""}`}
+                  className={`input input-bordered w-full px-5 ${errors.passportNumber ? "input-error" : ""}`}
                 />
                 {errors.passportNumber && (
                   <label className="label">
@@ -454,7 +454,7 @@ export default function AddCustomer() {
                   name="visaType"
                   value={formData.visaType}
                   onChange={handleChange}
-                  className={`select select-bordered w-full ${errors.visaType ? "select-error" : ""}`}
+                  className={`select select-bordered w-full px-5 ${errors.visaType ? "select-error" : ""}`}
                 >
                   <option value="">Select visa type</option>
                   <option value="Tourist Visa (TR)">Tourist Visa (TR)</option>
