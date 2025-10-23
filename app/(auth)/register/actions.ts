@@ -1,7 +1,8 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { hashPassword, createSession } from "@/lib/auth"
+import { hashPassword } from "@/lib/auth"
+import { createSession } from "@/app/actions/session"
 import { z } from "zod"
 
 const RegisterSchema = z.object({
@@ -44,7 +45,6 @@ export async function registerCompanyAdmin(
   const { companyName, name, email, password } = validatedFields.data
 
   try {
-    // Check if user already exists
     const existingUsers = await sql`
       SELECT id FROM users WHERE email = ${email}
     `
@@ -58,7 +58,6 @@ export async function registerCompanyAdmin(
       }
     }
 
-    // Create company
     const companies = await sql`
       INSERT INTO companies (name)
       VALUES (${companyName})
@@ -67,10 +66,8 @@ export async function registerCompanyAdmin(
 
     const companyId = companies[0].id
 
-    // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create admin user
     const users = await sql`
       INSERT INTO users (company_id, name, email, password_hash, is_admin, role)
       VALUES (${companyId}, ${name}, ${email}, ${passwordHash}, true, 'admin')
@@ -79,7 +76,6 @@ export async function registerCompanyAdmin(
 
     const userId = users[0].id
 
-    // Create session
     await createSession(userId, companyId)
 
     return {

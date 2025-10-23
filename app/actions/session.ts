@@ -5,22 +5,19 @@ import { sql } from "@/lib/db"
 import crypto from "crypto"
 
 export async function createSession(userId: string, companyId: string) {
-  // Delete any existing sessions for this user (single session per user)
   await sql`
     DELETE FROM sessions 
     WHERE user_id = ${userId}
   `
 
-  // Create new session
   const sessionToken = crypto.randomBytes(32).toString("hex")
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
+  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
 
   await sql`
     INSERT INTO sessions (user_id, company_id, token, expires_at)
     VALUES (${userId}, ${companyId}, ${sessionToken}, ${expiresAt})
   `
 
-  // Set session cookie
   const cookieStore = await cookies()
   cookieStore.set("session_token", sessionToken, {
     httpOnly: true,

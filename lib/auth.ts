@@ -9,8 +9,6 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return bcrypt.compare(password, hashedPassword)
 }
 
-// getSession is imported from "@/app/actions/session"
-
 export async function requireAuth() {
   const session = await getSession()
 

@@ -1,7 +1,8 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { verifyPassword, createSession } from "@/lib/auth"
+import { verifyPassword } from "@/lib/auth"
+import { createSession } from "@/app/actions/session"
 import { z } from "zod"
 
 const LoginSchema = z.object({
