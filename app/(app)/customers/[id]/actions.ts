@@ -1,17 +1,14 @@
 "use server"
 
-import { sql } from "@vercel/postgres"
+import { sql } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { getSession } from "@/lib/auth"
+import { getSession } from "@/app/actions/session"
 
 export type Note = {
   id: number
   customer_id: number
-  user_id: number
   content: string
   created_at: string
-  company_id: number
-  user_email: string
   isOptimistic?: boolean
 }
 
@@ -25,40 +22,55 @@ export type CustomerFile = {
 }
 
 export async function addNote(customerId: number, content: string) {
-  const session = await getSession()
-
-  if (!session) {
-    throw new Error("Unauthorized")
-  }
-
-  try {
-    await sql`
-      INSERT INTO customer_notes (customer_id, user_id, content, company_id)
-      VALUES (${customerId}, ${session.user_id}, ${content}, ${session.company_id})
-    `
-
-    revalidatePath(`/customers/${customerId}`)
-    return { success: true }
-  } catch (error) {
-    console.error("Add note error:", error)
-    return { success: false, error: "Failed to add note" }
-  }
-}
-
-export async function deleteNote(noteId: number, customerId: number) {
-  // ✅ TENANT ISOLATION: Get user's company_id from session
+  // Get the user's session to access their company_id
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
+    // First verify this customer belongs to the user's company
+    const customerCheck = await sql`
+      SELECT id FROM customers 
+      WHERE id = ${customerId} AND company_id = ${session.company_id}
+    `
+
+    if (customerCheck.length === 0) {
+      return { success: false, error: "Customer not found or access denied" }
+    }
+
+    const result = await sql`
+      INSERT INTO customer_notes (customer_id, content)
+      VALUES (${customerId}, ${content})
+      RETURNING id
+    `
+
+    // Return the new note ID
+    const noteId = result[0]?.id
+
+    revalidatePath(`/customers/${customerId}`)
+    return { success: true, noteId }
+  } catch (error) {
+    console.error("Error adding note:", error)
+    return { success: false, error: "Failed to add note" }
+  }
+}
+
+export async function deleteNote(noteId: number, customerId: number) {
+  // Get the user's session to access their company_id
+  const session = await getSession()
+  if (!session) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  try {
+    // Validate that noteId is a valid integer
     if (!Number.isInteger(noteId) || noteId <= 0) {
       console.error("Invalid note ID:", noteId)
       return { success: false, error: "Invalid note ID" }
     }
 
-    // ✅ TENANT ISOLATION: Verify note belongs to customer in user's company
+    // First verify this customer belongs to the user's company
     const customerCheck = await sql`
       SELECT c.id FROM customers c
       JOIN customer_notes n ON n.customer_id = c.id
@@ -82,14 +94,14 @@ export async function deleteNote(noteId: number, customerId: number) {
 }
 
 export async function uploadFile(customerId: number, file: File) {
-  // ✅ TENANT ISOLATION: Get user's company_id from session
+  // Get the user's session to access their company_id
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
-    // ✅ TENANT ISOLATION: Verify customer belongs to user's company
+    // First verify this customer belongs to the user's company
     const customerCheck = await sql`
       SELECT id FROM customers 
       WHERE id = ${customerId} AND company_id = ${session.company_id}
@@ -99,13 +111,17 @@ export async function uploadFile(customerId: number, file: File) {
       return { success: false, error: "Customer not found or access denied" }
     }
 
+    // In a real app, you would upload the file to storage and save the path
+    // For this demo, we'll simulate file upload by just storing metadata
     const filename = file.name
     const fileType = file.type
+
+    // Simulate file path (in a real app, this would be the actual storage path)
     const filePath = `/uploads/${customerId}/${Date.now()}-${filename}`
 
     await sql`
-      INSERT INTO customer_files (customer_id, filename, file_type, file_path, company_id)
-      VALUES (${customerId}, ${filename}, ${fileType}, ${filePath}, ${session.company_id})
+      INSERT INTO customer_files (customer_id, filename, file_type, file_path)
+      VALUES (${customerId}, ${filename}, ${fileType}, ${filePath})
     `
 
     revalidatePath(`/customers/${customerId}`)
@@ -116,6 +132,7 @@ export async function uploadFile(customerId: number, file: File) {
   }
 }
 
+// Helper function to implement retry logic with exponential backoff
 async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
   let retries = 0
   let delay = initialDelay
@@ -128,13 +145,15 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
         throw error
       }
 
+      // Check if it's a rate limit error (Too Many Requests)
       const errorMessage = error instanceof Error ? error.message : String(error)
       if (errorMessage.includes("Too Many Requests")) {
         console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${retries + 1}/${maxRetries})`)
         await new Promise((resolve) => setTimeout(resolve, delay))
         retries++
-        delay *= 2
+        delay *= 2 // Exponential backoff
       } else {
+        // If it's not a rate limit error, rethrow
         throw error
       }
     }
@@ -142,16 +161,17 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, initial
 }
 
 export async function getCustomerDetails(customerId: number) {
-  // ✅ TENANT ISOLATION: Get user's company_id from session
+  // Get the user's session to access their company_id
   const session = await getSession()
   if (!session) {
     return { success: false, error: "Unauthorized" }
   }
 
   try {
+    // Use retry logic for database queries
     const customerData = await retryWithBackoff(async () => {
       try {
-        // ✅ TENANT ISOLATION: Filter by company_id
+        // Get customer data with company_id check
         const customerResult = await sql`
           SELECT * FROM customers 
           WHERE id = ${customerId} AND company_id = ${session.company_id}
@@ -163,6 +183,7 @@ export async function getCustomerDetails(customerId: number) {
 
         return { customer: customerResult[0] }
       } catch (error) {
+        // Handle potential non-JSON responses
         const errorMessage = error instanceof Error ? error.message : String(error)
         if (errorMessage.includes("Unexpected token") && errorMessage.includes("Too Many R")) {
           throw new Error("Too Many Requests - Rate limit exceeded")
@@ -171,11 +192,12 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
+    // If customer not found, return error
     if (!customerData.customer) {
       return { success: false, error: "Customer not found or access denied" }
     }
 
-    // ✅ TENANT ISOLATION: Reports are filtered through customer's company_id
+    // Get other data with separate retries to avoid overwhelming the database
     const reportData = await retryWithBackoff(async () => {
       try {
         const reportResult = await sql`
@@ -196,18 +218,16 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
-    // ✅ TENANT ISOLATION: Notes are filtered through customer's company_id
     const notesData = await retryWithBackoff(async () => {
       try {
         const notesResult = await sql`
-          SELECT cn.*, u.email as user_email
-          FROM customer_notes cn
-          JOIN users u ON cn.user_id = u.id
-          WHERE cn.customer_id = ${customerId}
-          AND cn.company_id = ${session.company_id}
-          ORDER BY cn.created_at DESC
+          SELECT n.* FROM customer_notes n
+          JOIN customers c ON n.customer_id = c.id
+          WHERE n.customer_id = ${customerId}
+          AND c.company_id = ${session.company_id}
+          ORDER BY n.created_at DESC
         `
-        return notesResult.rows
+        return notesResult
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
         if (errorMessage.includes("Unexpected token") && errorMessage.includes("Too Many R")) {
@@ -217,7 +237,6 @@ export async function getCustomerDetails(customerId: number) {
       }
     })
 
-    // ✅ TENANT ISOLATION: Files are filtered through customer's company_id
     const filesData = await retryWithBackoff(async () => {
       try {
         const filesResult = await sql`
@@ -247,6 +266,7 @@ export async function getCustomerDetails(customerId: number) {
   } catch (error) {
     console.error("Error fetching customer details:", error)
 
+    // Provide a more user-friendly error message for rate limiting
     const errorMessage = error instanceof Error ? error.message : String(error)
     if (errorMessage.includes("Too Many Requests")) {
       return {
@@ -256,47 +276,5 @@ export async function getCustomerDetails(customerId: number) {
     }
 
     return { success: false, error: "Failed to fetch customer details" }
-  }
-}
-
-export async function updateReportStatus(reportId: number, status: string) {
-  try {
-    const session = await getSession()
-    if (!session) {
-      throw new Error("Unauthorized")
-    }
-
-    await sql`
-      UPDATE reports 
-      SET status = ${status}, updated_at = NOW()
-      WHERE id = ${reportId}
-    `
-
-    revalidatePath(`/customers`)
-    return { success: true }
-  } catch (error) {
-    console.error("Error updating report status:", error)
-    return { success: false, error: "Failed to update report status" }
-  }
-}
-
-export async function addReportNote(reportId: number, note: string) {
-  try {
-    const session = await getSession()
-    if (!session) {
-      throw new Error("Unauthorized")
-    }
-
-    await sql`
-      UPDATE reports 
-      SET note = ${note}, updated_at = NOW()
-      WHERE id = ${reportId}
-    `
-
-    revalidatePath(`/customers`)
-    return { success: true }
-  } catch (error) {
-    console.error("Error adding report note:", error)
-    return { success: false, error: "Failed to add report note" }
   }
 }

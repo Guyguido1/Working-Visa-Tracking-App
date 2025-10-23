@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/app/actions/session"
 
-export const dynamic = "force-dynamic"
-
 export async function GET() {
   try {
     // Get the user's session to access their company_id

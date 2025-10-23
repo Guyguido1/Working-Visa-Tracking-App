@@ -1,13 +1,4 @@
 import type React from "react"
-
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      {children}
-    </div>
-  )
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen bg-blue-900 flex items-center justify-center p-4">{children}</div>
 }
