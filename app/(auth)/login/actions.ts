@@ -11,7 +11,7 @@ const LoginSchema = z.object({
   password: z.string().min(1, { message: "Password is required" }),
 })
 
-export async function loginUser(prevState: any, formData: FormData) {
+export async function login(prevState: any, formData: FormData) {
   // Validate form data
   const validatedFields = LoginSchema.safeParse({
     email: formData.get("email"),
@@ -87,3 +87,6 @@ export async function loginUser(prevState: any, formData: FormData) {
     }
   }
 }
+
+// Keep the old export for backwards compatibility
+export { login as loginUser }

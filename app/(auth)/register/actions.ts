@@ -38,7 +38,7 @@ export type RegisterFormState = {
   name?: string
 }
 
-export async function registerCompanyAdmin(prevState: RegisterFormState, formData: FormData) {
+export async function register(prevState: RegisterFormState, formData: FormData) {
   try {
     // Check if user is already logged in
     const session = await getSession()
@@ -123,3 +123,6 @@ export async function registerCompanyAdmin(prevState: RegisterFormState, formDat
     }
   }
 }
+
+// Keep the old export for backwards compatibility
+export { register as registerCompanyAdmin }

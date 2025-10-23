@@ -1,98 +1,73 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useFormState } from "react-dom"
-import { loginUser } from "./actions"
-import { AlertCircle } from "lucide-react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { login } from "./actions"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 const initialState = {
   errors: {},
   message: "",
 }
 
-export default function LoginForm() {
+export function LoginForm() {
+  const [state, formAction] = useFormState(login, initialState)
   const router = useRouter()
-  const [state, formAction] = useFormState(loginUser, initialState)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Handle redirect after successful login
   useEffect(() => {
-    if (state && state.redirectTo) {
+    if (state?.redirectTo) {
       router.push(state.redirectTo)
     }
-  }, [state, router])
-
-  const handleSubmit = (formData: FormData) => {
-    setIsSubmitting(true)
-    formAction(formData)
-  }
+  }, [state?.redirectTo, router])
 
   return (
-    <form action={handleSubmit} className="space-y-4">
-      {state.message && (
-        <div
-          className="bg-red-100 border border-red-400 px-4 py-3 rounded relative"
-          style={{ color: "#b91c1c" }}
-          role="alert"
-        >
-          <div className="flex items-center">
-            <AlertCircle className="h-4 w-4 mr-2" style={{ color: "#b91c1c" }} />
-            <span style={{ color: "#b91c1c" }}>{state.message}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: "black" }}>
+    <form action={formAction} className="space-y-6">
+      <div>
+        <Label htmlFor="email" className="text-white">
           Email
-        </label>
-        <input
+        </Label>
+        <Input
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white"
-          style={{ color: "black" }}
+          className="mt-1 bg-white text-gray-900 border-gray-300"
         />
-        {state.errors?.email && (
-          <p className="text-sm" style={{ color: "#dc2626" }}>
-            {state.errors.email}
-          </p>
+        {state?.errors?.email && (
+          <p className="mt-1 text-sm text-red-200 bg-red-900/30 p-2 rounded">{state.errors.email[0]}</p>
         )}
       </div>
 
-      <div className="space-y-3">
-        <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: "black" }}>
+      <div>
+        <Label htmlFor="password" className="text-white">
           Password
-        </label>
-        <input
+        </Label>
+        <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white"
-          style={{ color: "black" }}
+          className="mt-1 bg-white text-gray-900 border-gray-300"
         />
-        {state.errors?.password && (
-          <p className="text-sm" style={{ color: "#dc2626" }}>
-            {state.errors.password}
-          </p>
+        {state?.errors?.password && (
+          <p className="mt-1 text-sm text-red-200 bg-red-900/30 p-2 rounded">{state.errors.password[0]}</p>
         )}
       </div>
 
-      <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          style={{ color: "white" }}
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
-      </div>
+      {state?.message && (
+        <div className="rounded-md bg-red-900/30 p-4">
+          <p className="text-sm text-red-200">{state.message}</p>
+        </div>
+      )}
+
+      <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white">
+        Sign in
+      </Button>
     </form>
   )
 }
