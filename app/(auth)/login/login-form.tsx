@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useFormState } from "react-dom"
 import { loginUser } from "./actions"
 import { AlertCircle } from "lucide-react"
 
@@ -13,7 +13,7 @@ const initialState = {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useActionState(loginUser, initialState)
+  const [state, formAction] = useFormState(loginUser, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Handle redirect after successful login - Added null check

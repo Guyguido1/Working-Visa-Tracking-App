@@ -1,152 +1,98 @@
-"use client"
-
-import { CheckCircle, Clock, Calendar, Cake, Shield, Users, LayoutDashboard, Globe } from "lucide-react"
 import Link from "next/link"
+import { CheckCircle, Shield, Users, Calendar } from "lucide-react"
 
 export function SplashPage() {
   return (
     <div className="min-h-screen bg-blue-950 text-white">
-      {/* Navigation */}
-      <nav className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <span className="text-2xl font-bold text-white">VisaPilot</span>
-          </div>
+      {/* Header */}
+      <header className="bg-blue-900 shadow-md">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+          <h1 className="text-3xl font-bold">VisaPilot</h1>
+          <nav className="space-x-4">
+            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md font-medium"
+            >
+              Get Started
+            </Link>
+          </nav>
         </div>
-      </nav>
+      </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-          Manage Your Visa Clients with <span className="text-blue-400">Clarity & Confidence</span>
-        </h1>
-        <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto text-white">
-          A secure, all-in-one platform for visa agencies to track customer statuses, reports, and expirations.
+      <section className="container mx-auto px-4 py-20 text-center">
+        <h2 className="text-5xl font-bold mb-6">Simplify Your Visa Management</h2>
+        <p className="text-xl text-blue-300 mb-8 max-w-2xl mx-auto">
+          Track visa applications, manage deadlines, and stay organized with our powerful visa management platform.
         </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Link
-            href="/login"
-            className="px-8 py-3 rounded-md bg-blue-700 text-white font-medium text-lg hover:bg-blue-800 transition-colors"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="px-8 py-3 rounded-md bg-blue-700 text-white font-medium text-lg hover:bg-blue-800 transition-colors"
-          >
-            Register
-          </Link>
+        <Link
+          href="/register"
+          className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-lg text-lg font-semibold inline-block"
+        >
+          Start Free Trial
+        </Link>
+      </section>
+
+      {/* Features Section */}
+      <section className="bg-blue-900 py-20">
+        <div className="container mx-auto px-4">
+          <h3 className="text-3xl font-bold text-center mb-12">Why Choose VisaPilot?</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-blue-800 p-6 rounded-lg">
+              <div className="bg-blue-700 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="text-white" size={24} />
+              </div>
+              <h4 className="text-xl font-semibold mb-2">Easy Tracking</h4>
+              <p className="text-blue-300">Monitor all visa applications in one centralized dashboard.</p>
+            </div>
+            <div className="bg-blue-800 p-6 rounded-lg">
+              <div className="bg-blue-700 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Calendar className="text-white" size={24} />
+              </div>
+              <h4 className="text-xl font-semibold mb-2">Deadline Alerts</h4>
+              <p className="text-blue-300">Never miss important dates with automated reminders.</p>
+            </div>
+            <div className="bg-blue-800 p-6 rounded-lg">
+              <div className="bg-blue-700 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Shield className="text-white" size={24} />
+              </div>
+              <h4 className="text-xl font-semibold mb-2">Secure & Private</h4>
+              <p className="text-blue-300">Your data is encrypted and protected with enterprise-grade security.</p>
+            </div>
+            <div className="bg-blue-800 p-6 rounded-lg">
+              <div className="bg-blue-700 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Users className="text-white" size={24} />
+              </div>
+              <h4 className="text-xl font-semibold mb-2">Team Collaboration</h4>
+              <p className="text-blue-300">Work together seamlessly with your team members.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features Sections in Two Columns */}
-      <div className="flex flex-col md:flex-row">
-        {/* How It Works Section */}
-        <section className="bg-blue-950 py-16 w-full md:w-1/2">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-8 text-white">How It Works</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                {
-                  icon: <CheckCircle className="w-10 h-10 text-white" />,
-                  title: "Add customers",
-                  description: "Easily add and manage your visa clients in one place",
-                },
-                {
-                  icon: <Clock className="w-10 h-10 text-white" />,
-                  title: "Track visa + passport expiries",
-                  description: "Never miss an important expiration date again",
-                },
-                {
-                  icon: <Calendar className="w-10 h-10 text-white" />,
-                  title: "Monitor report deadlines",
-                  description: "Stay on top of all reporting requirements",
-                },
-                {
-                  icon: <Cake className="w-10 h-10 text-white" />,
-                  title: "See upcoming birthdays",
-                  description: "Build client relationships with timely birthday greetings",
-                },
-              ].map((item, index) => (
-                <div key={index} className="bg-blue-900 p-4 rounded-lg">
-                  <div className="flex items-start">
-                    <div className="bg-blue-800 p-3 rounded-full mr-3">{item.icon}</div>
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1 text-white">{item.title}</h3>
-                      <p className="text-white text-sm">{item.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Why VisaPilot Section */}
-        <section className="py-16 w-full md:w-1/2 bg-blue-950">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-8 text-white">Why VisaPilot</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                {
-                  icon: <Users className="w-10 h-10 text-white" />,
-                  title: "Built for visa agencies",
-                  description:
-                    "Designed specifically for the unique needs of visa consultants and immigration agencies",
-                },
-                {
-                  icon: <Shield className="w-10 h-10 text-white" />,
-                  title: "Secure and multi-tenant",
-                  description: "Keep your client data safe with our secure, isolated multi-tenant architecture",
-                },
-                {
-                  icon: <LayoutDashboard className="w-10 h-10 text-white" />,
-                  title: "Designed for daily use",
-                  description: "Intuitive interface that makes managing visa clients efficient and stress-free",
-                },
-                {
-                  icon: <Globe className="w-10 h-10 text-white" />,
-                  title: "Global compliance",
-                  description: "Stay compliant with visa regulations and requirements across different countries",
-                },
-              ].map((item, index) => (
-                <div key={index} className="bg-blue-900 p-4 rounded-lg">
-                  <div className="flex items-start">
-                    <div className="bg-blue-800 p-3 rounded-full mr-3">{item.icon}</div>
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1 text-white">{item.title}</h3>
-                      <p className="text-white text-sm">{item.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
-
       {/* CTA Section */}
-      <section className="bg-blue-700 py-10">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Ready to streamline your visa management?</h2>
+      <section className="bg-blue-700 py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h3 className="text-4xl font-bold mb-6">Ready to Get Started?</h3>
+          <p className="text-xl text-blue-200 mb-8">
+            Join thousands of organizations managing their visas efficiently.
+          </p>
           <Link
             href="/register"
-            className="px-8 py-3 rounded-md bg-white text-blue-700 font-medium text-lg hover:bg-gray-100 transition-colors inline-block"
+            className="bg-white text-blue-700 hover:bg-blue-100 px-8 py-3 rounded-lg text-lg font-semibold inline-block"
           >
-            Get Started Today
+            Create Your Free Account
           </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-blue-900 py-8">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <span className="text-xl font-bold text-white">VisaPilot</span>
-            </div>
-            <div className="text-white text-sm">© {new Date().getFullYear()} VisaPilot. All rights reserved.</div>
-          </div>
+        <div className="container mx-auto px-4 text-center text-blue-300">
+          <p>&copy; 2025 VisaPilot. All rights reserved.</p>
         </div>
       </footer>
     </div>
