@@ -1,19 +1,25 @@
 "use server"
 
-import { z } from "zod"
-import bcrypt from "bcryptjs"
 import { sql } from "@/lib/db"
+import { hashPassword } from "@/lib/auth"
+import { z } from "zod"
+import { getSession } from "@/app/actions/session"
 
-const registerSchema = z
+const RegisterSchema = z
   .object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email address"),
-    companyName: z.string().min(1, "Company name is required"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: z.string().email({ message: "Please enter a valid email address" }),
+    companyName: z.string().min(2, { message: "Company name must be at least 2 characters" }),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters" })
+      .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+      .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+      .regex(/[0-9]/, { message: "Password must contain at least one number" }),
+    confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   })
 
@@ -26,60 +32,70 @@ export type RegisterFormState = {
     confirmPassword?: string[]
     _form?: string[]
   }
-  success?: boolean
   message?: string
+  success?: boolean
+  name?: string
 }
 
-export async function registerCompanyAdmin(
-  prevState: RegisterFormState | undefined,
-  formData: FormData,
-): Promise<RegisterFormState> {
-  const validatedFields = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    companyName: formData.get("companyName"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
-  })
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    }
-  }
-
-  const { name, email, companyName, password } = validatedFields.data
-
+export async function registerCompanyAdmin(prevState: RegisterFormState, formData: FormData) {
   try {
-    // Check if email already exists
-    const existingUsers = await sql`
-      SELECT id FROM users WHERE email = ${email}
-    `
-
-    if (existingUsers.length > 0) {
+    const session = await getSession()
+    if (session) {
       return {
+        success: false,
+        name: "Already logged in",
         errors: {
-          _form: ["An account with this email already exists"],
+          _form: ["You are already logged in. Please log out first."],
         },
       }
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const validatedFields = RegisterSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      companyName: formData.get("companyName"),
+      password: formData.get("password"),
+      confirmPassword: formData.get("confirmPassword"),
+    })
 
-    // Create company
-    const companies = await sql`
-      INSERT INTO companies (name)
-      VALUES (${companyName})
-      RETURNING id
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+        message: "Please correct the errors in the form.",
+        success: false,
+        name: "Validation failed",
+      }
+    }
+
+    const { name, email, companyName, password } = validatedFields.data
+
+    const existingUser = await sql`
+      SELECT id FROM users WHERE email = ${email}
     `
 
-    const companyId = companies[0].id
+    if (existingUser.length > 0) {
+      return {
+        errors: {
+          email: ["Email already registered"],
+          _form: ["Email already registered. Please use a different email address."],
+        },
+        success: false,
+        name: "Email already registered",
+      }
+    }
 
-    // Create admin user
+    const hashedPassword = await hashPassword(password)
+
+    const companyResult = await sql`
+      INSERT INTO companies (name, email)
+      VALUES (${companyName}, ${email})
+      RETURNING id
+    `
+    const companyId = companyResult[0].id
+
     await sql`
-      INSERT INTO users (name, email, password, company_id, is_admin, role)
-      VALUES (${name}, ${email}, ${hashedPassword}, ${companyId}, true, 'admin')
+      INSERT INTO users (company_id, name, email, password_hash, is_admin, role)
+      VALUES (${companyId}, ${name}, ${email}, ${hashedPassword}, ${true}, 'admin')
     `
 
     return {
@@ -87,10 +103,13 @@ export async function registerCompanyAdmin(
       message: "Registration successful! Please log in.",
     }
   } catch (error) {
-    console.error("Registration error:", error)
+    console.error("Registration failed:", error)
+
     return {
+      success: false,
+      name: "An unexpected error occurred during registration",
       errors: {
-        _form: ["An error occurred during registration. Please try again."],
+        _form: ["An unexpected error occurred during registration"],
       },
     }
   }

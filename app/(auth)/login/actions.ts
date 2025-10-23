@@ -1,14 +1,14 @@
 "use server"
 
-import { z } from "zod"
-import bcrypt from "bcryptjs"
-import { cookies } from "next/headers"
 import { sql } from "@/lib/db"
-import crypto from "crypto"
+import { verifyPassword } from "@/lib/auth"
+import { createSession } from "@/app/actions/session"
+import { redirect } from "next/navigation"
+import { z } from "zod"
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+const LoginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
 })
 
 export type LoginFormState = {
@@ -17,11 +17,11 @@ export type LoginFormState = {
     password?: string[]
     _form?: string[]
   }
-  success?: boolean
+  message?: string
 }
 
-export async function loginUser(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
-  const validatedFields = loginSchema.safeParse({
+export async function login(prevState: LoginFormState | undefined, formData: FormData): Promise<LoginFormState> {
+  const validatedFields = LoginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   })
@@ -29,16 +29,16 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
+      message: "Please correct the errors in the form.",
     }
   }
 
   const { email, password } = validatedFields.data
 
   try {
-    // Find user by email
     const users = await sql`
-      SELECT id, email, password, company_id, is_admin, role 
-      FROM users 
+      SELECT id, email, password_hash, company_id, is_admin, role, name
+      FROM users
       WHERE email = ${email}
     `
 
@@ -52,10 +52,9 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
 
     const user = users[0]
 
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.password)
+    const isValidPassword = await verifyPassword(password, user.password_hash)
 
-    if (!passwordMatch) {
+    if (!isValidPassword) {
       return {
         errors: {
           _form: ["Invalid email or password"],
@@ -63,32 +62,7 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
       }
     }
 
-    // Delete any existing sessions for this user (single session per user)
-    await sql`
-      DELETE FROM sessions 
-      WHERE user_id = ${user.id}
-    `
-
-    // Create new session
-    const sessionToken = crypto.randomBytes(32).toString("hex")
-    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000) // 12 hours
-
-    await sql`
-      INSERT INTO sessions (user_id, company_id, token, expires_at)
-      VALUES (${user.id}, ${user.company_id}, ${sessionToken}, ${expiresAt})
-    `
-
-    // Set session cookie
-    const cookieStore = await cookies()
-    cookieStore.set("session_token", sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: expiresAt,
-      path: "/",
-    })
-
-    return { success: true }
+    await createSession(user.id, user.company_id)
   } catch (error) {
     console.error("Login error:", error)
     return {
@@ -97,4 +71,6 @@ export async function loginUser(prevState: LoginFormState | undefined, formData:
       },
     }
   }
+
+  redirect("/dashboard")
 }
