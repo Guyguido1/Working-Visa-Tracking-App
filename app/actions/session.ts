@@ -1,27 +1,45 @@
 "use server"
 
-import { getSession as authGetSession } from "@/lib/auth"
+import { cookies } from "next/headers"
+import { sql } from "@/lib/db"
 
-// Re-export getSession as a named export
-export { authGetSession as getSession }
+export async function getSession() {
+  const cookieStore = await cookies()
+  const sessionId = cookieStore.get("session_id")?.value
 
-export async function getCurrentUser() {
+  if (!sessionId) {
+    return null
+  }
+
   try {
-    const session = await authGetSession()
-    if (!session) {
+    const sessions = await sql`
+      SELECT s.id, s.user_id, s.expires, s.session_token, 
+             u.name, u.email, u.is_admin, u.role, u.company_id
+      FROM sessions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.id = ${sessionId} AND s.expires > NOW()
+    `
+
+    if (sessions.length === 0) {
       return null
     }
 
-    return {
-      id: session.user_id,
-      name: session.name,
-      email: session.email,
-      is_admin: session.is_admin,
-      role: session.role,
-      company_id: session.company_id,
-    }
+    return sessions[0]
   } catch (error) {
-    console.error("Error getting current user:", error)
+    console.error("Error getting session:", error)
     return null
   }
+}
+
+export async function deleteSession() {
+  const cookieStore = await cookies()
+  const sessionId = cookieStore.get("session_id")?.value
+
+  if (sessionId) {
+    await sql`
+      DELETE FROM sessions WHERE id = ${sessionId}
+    `
+  }
+
+  cookieStore.delete("session_id")
 }

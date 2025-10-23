@@ -3,22 +3,23 @@ import RegisterForm from "./register-form"
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-blue-950 text-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-white hover:text-blue-400 transition-colors">
-            VisaPilot
-          </Link>
-          <h2 className="mt-6 text-2xl font-bold text-white">Create your account</h2>
-        </div>
+        <div className="bg-blue-950 shadow-2xl rounded-lg px-8 pt-6 pb-8 mb-4 border border-blue-800">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+            <p className="text-blue-300">Register your company</p>
+          </div>
 
-        <div className="bg-blue-900 py-8 px-6 shadow-lg rounded-lg">
-          <RegisterForm key={Date.now()} />
+          <RegisterForm />
 
-          <div className="mt-4 text-center">
-            <Link href="/login" className="text-blue-400 hover:text-blue-300 text-sm">
-              Already have an account? Sign in here
-            </Link>
+          <div className="mt-6 text-center">
+            <p className="text-blue-300 text-sm">
+              Already have an account?{" "}
+              <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
+                Sign in here
+              </Link>
+            </p>
           </div>
         </div>
       </div>

@@ -27,7 +27,7 @@ export async function loginUser(prevState: any, formData: FormData) {
 
   try {
     const users = await sql`
-      SELECT id, company_id, name, email, password_hash, is_admin, role
+      SELECT id, email, password_hash, company_id, is_admin, role, name
       FROM users
       WHERE email = ${email}
     `
@@ -68,7 +68,9 @@ export async function loginUser(prevState: any, formData: FormData) {
       expires,
     })
 
-    return { redirectTo: "/dashboard" }
+    return {
+      redirectTo: "/dashboard",
+    }
   } catch (error) {
     console.error("Login error:", error)
     return {

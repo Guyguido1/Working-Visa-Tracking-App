@@ -1,133 +1,97 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState } from "react"
 import { addUser } from "./actions"
+import { X } from "lucide-react"
 
-export default function AddUserForm({ onUserAdded, onCancel }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "user",
-    is_admin: false,
-  })
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+interface AddUserFormProps {
+  onClose: () => void
+  onSuccess: () => void
+}
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }))
-  }
+export default function AddUserForm({ onClose, onSuccess }: AddUserFormProps) {
+  const [state, formAction, isPending] = useActionState(addUser, undefined)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    try {
-      // Basic validation
-      if (!formData.name || !formData.email || !formData.password) {
-        throw new Error("All fields are required")
-      }
-
-      if (formData.password.length < 6) {
-        throw new Error("Password must be at least 6 characters")
-      }
-
-      const result = await addUser(new FormData(e.target))
-
-      if (!result.success) {
-        throw new Error(result.name || "Failed to add user")
-      }
-
-      onUserAdded()
-    } catch (err) {
-      setError(err.message || "Failed to add user. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+  if (state?.success) {
+    setTimeout(() => {
+      onSuccess()
+      onClose()
+    }, 1000)
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="alert alert-error mb-4">
-          <span>{error}</span>
-        </div>
-      )}
+    <dialog id="add_user_modal" className="modal modal-open">
+      <div className="modal-box">
+        <form method="dialog">
+          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </button>
+        </form>
+        <h3 className="font-bold text-lg mb-4">Add New User</h3>
+        <form action={formAction} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="label">
+              <span className="label-text">Full Name</span>
+            </label>
+            <input type="text" id="name" name="name" className="input input-bordered w-full px-5" required />
+            {state?.errors?.name && <p className="text-error text-sm mt-1">{state.errors.name[0]}</p>}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-control">
-          <label className="block text-sm font-medium mb-2">Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
+          <div>
+            <label htmlFor="email" className="label">
+              <span className="label-text">Email</span>
+            </label>
+            <input type="email" id="email" name="email" className="input input-bordered w-full px-5" required />
+            {state?.errors?.email && <p className="text-error text-sm mt-1">{state.errors.email[0]}</p>}
+          </div>
 
-        <div className="form-control">
-          <label className="block text-sm font-medium mb-2">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
+          <div>
+            <label htmlFor="role" className="label">
+              <span className="label-text">Role</span>
+            </label>
+            <select id="role" name="role" className="select select-bordered w-full px-5" required>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+            {state?.errors?.role && <p className="text-error text-sm mt-1">{state.errors.role[0]}</p>}
+          </div>
 
-        <div className="form-control">
-          <label className="block text-sm font-medium mb-2">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-            minLength={6}
-          />
-        </div>
-
-        <div className="form-control">
-          <label className="block text-sm font-medium mb-2">Role</label>
-          <select name="role" value={formData.role} onChange={handleChange} className="select select-bordered w-full">
-            <option value="user">User</option>
-            <option value="manager">Manager</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div className="form-control">
-          <label className="flex items-center justify-between cursor-pointer mt-2">
-            <span className="label-text">Admin Privileges</span>
+          <div>
+            <label htmlFor="password" className="label">
+              <span className="label-text">Password</span>
+            </label>
             <input
-              type="checkbox"
-              name="is_admin"
-              checked={formData.is_admin}
-              onChange={handleChange}
-              className="checkbox"
+              type="password"
+              id="password"
+              name="password"
+              className="input input-bordered w-full px-5"
+              required
             />
-          </label>
-        </div>
-      </div>
+            {state?.errors?.password && <p className="text-error text-sm mt-1">{state.errors.password[0]}</p>}
+          </div>
 
-      <div className="flex justify-end mt-6 space-x-2">
-        <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={loading}>
-          Cancel
-        </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Adding..." : "Add User"}
-        </button>
+          {state?.message && !state?.success && (
+            <div className="alert alert-error">
+              <span>{state.message}</span>
+            </div>
+          )}
+
+          {state?.success && (
+            <div className="alert alert-success">
+              <span>{state.message}</span>
+            </div>
+          )}
+
+          <div className="modal-action">
+            <button type="button" className="btn" onClick={onClose} disabled={isPending}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={isPending}>
+              {isPending ? "Adding..." : "Add User"}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </dialog>
   )
 }
