@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useFormState } from "react-dom"
+import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { loginUser } from "./actions"
 import { AlertCircle } from "lucide-react"
@@ -13,10 +13,10 @@ const initialState = {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useFormState(loginUser, initialState)
+  const [state, formAction] = useActionState(loginUser, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Handle redirect after successful login
+  // Handle redirect after successful login - Added null check
   useEffect(() => {
     if (state && state.redirectTo) {
       router.push(state.redirectTo)

@@ -1,25 +1,29 @@
-import Link from "next/link"
 import RegisterForm from "./register-form"
+import Link from "next/link"
 
 export default function RegisterPage() {
   return (
-    <div className="auth-page bg-gray-50 text-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">VisaPilot</h1>
-          <p className="mt-2 text-sm text-gray-600">Create your company account</p>
-        </div>
+    <div className="w-full max-w-md">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-blue-600 mb-3">VisaPilot</h1>
+        <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2">
+          Manage Your Visa Clients with Clarity & Confidence
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          A secure, all-in-one platform for visa agencies to track customers
+        </p>
+      </div>
 
-        <div className="bg-white shadow-md rounded-lg p-8">
-          <RegisterForm />
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
+      <div className="bg-white rounded-lg shadow-lg p-6 auth-form">
+        <h3 className="text-2xl font-bold text-center mb-6 text-gray-900">Register Company Admin</h3>
+        <RegisterForm />
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">
+              Log in
+            </Link>
+          </p>
         </div>
       </div>
     </div>
