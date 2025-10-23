@@ -5,10 +5,8 @@ import { Moon, Sun } from "lucide-react"
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState("light")
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const savedTheme = localStorage.getItem("theme") || "light"
     setTheme(savedTheme)
     document.documentElement.setAttribute("data-theme", savedTheme)
@@ -21,17 +19,8 @@ export default function ThemeToggle() {
     document.documentElement.setAttribute("data-theme", newTheme)
   }
 
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return <div className="btn btn-circle btn-ghost w-10 h-10" />
-  }
-
   return (
-    <button
-      onClick={toggleTheme}
-      className="btn btn-circle btn-ghost"
-      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-    >
+    <button onClick={toggleTheme} className="btn btn-circle btn-ghost">
       {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
     </button>
   )

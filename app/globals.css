@@ -14,7 +14,7 @@ body {
 
 @layer base {
   :root {
-    --background: 219 100% 96%; /* Light blue background */
+    --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -93,28 +93,6 @@ body {
   }
 }
 
-/* Apply light blue background to the entire site in light mode */
-[data-theme="light"] body,
-[data-theme="light"] .bg-base-100,
-[data-theme="light"] .bg-base-200 {
-  background-color: #dbeafe !important; /* Light blue (blue-100) */
-}
-
-/* Make input and select borders dark grey in light mode for better visibility */
-input.input-bordered,
-select.select-bordered,
-textarea.textarea-bordered {
-  border-color: #4b5563 !important; /* dark grey (gray-600) */
-}
-
-/* Keep the focus state visible */
-input.input-bordered:focus,
-select.select-bordered:focus,
-textarea.textarea-bordered:focus {
-  border-color: #2563eb !important; /* blue for focus */
-  outline: none;
-}
-
 /* Add this at the end of your globals.css file */
 
 /* Force table text to be white in dark mode */
@@ -187,20 +165,6 @@ textarea.textarea-bordered:focus {
 
 [data-theme="dark"] .auth-form input {
   background-color: #ffffff !important;
-}
-
-/* Splash page exception for dark mode - keep text dark on light blue background */
-[data-theme="dark"] .splash-page,
-[data-theme="dark"] .splash-page h1,
-[data-theme="dark"] .splash-page h2,
-[data-theme="dark"] .splash-page h3,
-[data-theme="dark"] .splash-page p,
-[data-theme="dark"] .splash-page span,
-[data-theme="dark"] .splash-page div,
-[data-theme="dark"] .splash-page nav,
-[data-theme="dark"] .splash-page section,
-[data-theme="dark"] .splash-page footer {
-  color: inherit !important;
 }
 
 /* Delete note modal exception for dark mode */

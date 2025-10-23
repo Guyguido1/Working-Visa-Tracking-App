@@ -1,15 +1,11 @@
-"use client"
+'use client'
 
-import type React from "react"
+import * as React from 'react'
+import {
+  ThemeProvider as NextThemesProvider,
+  type ThemeProviderProps,
+} from 'next-themes'
 
-import { useEffect } from "react"
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    // Set theme from localStorage on mount
-    const savedTheme = localStorage.getItem("theme") || "light"
-    document.documentElement.setAttribute("data-theme", savedTheme)
-  }, [])
-
-  return <>{children}</>
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
 }
