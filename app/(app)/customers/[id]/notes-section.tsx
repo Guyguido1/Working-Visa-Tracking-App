@@ -163,16 +163,16 @@ export default function NotesSection({ customerId, existingNotes }: NotesSection
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-base-100 rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6 bg-red-50 rounded-lg delete-note-modal">
-              <div className="flex items-center gap-3 text-error mb-4">
+          <div className="bg-red-50 rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 bg-red-50 rounded-lg delete-note-modal text-black">
+              <div className="flex items-center gap-3 text-red-700 mb-4">
                 <AlertCircle className="w-6 h-6" />
-                <h3 className="text-lg font-bold">Delete Note</h3>
+                <h3 className="text-lg font-bold text-black">Delete Note</h3>
               </div>
 
-              <p className="py-4">Are you sure you want to delete this note? This action cannot be undone.</p>
+              <p className="py-4 text-black">Are you sure you want to delete this note? This action cannot be undone.</p>
 
-              {error && <p className="text-error text-sm mt-2 mb-4">{error}</p>}
+              {error && <p className="text-red-600 text-sm mt-2 mb-4">{error}</p>}
 
               <div className="flex justify-end gap-3 mt-6 delete-note-modal">
                 <button
@@ -181,7 +181,7 @@ export default function NotesSection({ customerId, existingNotes }: NotesSection
                     setShowDeleteConfirm(false)
                     setDeletingNoteId(null)
                   }}
-                  className="btn btn-ghost"
+                  className="btn btn-ghost text-black hover:bg-red-100"
                   disabled={isSubmitting}
                 >
                   Cancel
