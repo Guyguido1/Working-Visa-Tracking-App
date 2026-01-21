@@ -167,17 +167,35 @@ body {
   background-color: #ffffff !important;
 }
 
-/* Delete note modal exception for dark mode - HIGHEST PRIORITY */
-[data-theme="dark"] .delete-note-modal,
-[data-theme="dark"] .delete-note-modal *,
-[data-theme="dark"] .delete-note-modal h3,
-[data-theme="dark"] .delete-note-modal p,
+
+
+/* Form label spacing to prevent overlap with focus rings */
+.form-label-spacing {
+  margin-bottom: 0.5rem;
+}
+
+/* DELETE NOTE MODAL - MUST BE AT THE END TO OVERRIDE ALL PREVIOUS RULES */
+[data-theme="dark"] .delete-note-modal {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .delete-note-modal p {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .delete-note-modal h3 {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .delete-note-modal span {
+  color: #000000 !important;
+}
+
 [data-theme="dark"] .delete-note-modal div {
   color: #000000 !important;
 }
 
-/* Delete note modal buttons in dark mode */
-[data-theme="dark"] .delete-note-modal .btn-ghost {
+[data-theme="dark"] .delete-note-modal button {
   color: #000000 !important;
 }
 
@@ -185,7 +203,6 @@ body {
   color: #ffffff !important;
 }
 
-/* Form label spacing to prevent overlap with focus rings */
-.form-label-spacing {
-  margin-bottom: 0.5rem;
+[data-theme="dark"] .delete-note-modal .btn-ghost {
+  color: #000000 !important;
 }
