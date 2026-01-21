@@ -168,14 +168,17 @@ body {
 }
 
 /* Delete note modal exception for dark mode */
-[data-theme="dark"] .delete-note-modal,
+[data-theme="dark"] .delete-note-modal {
+  color: #000000 !important;
+}
+
 [data-theme="dark"] .delete-note-modal h3,
 [data-theme="dark"] .delete-note-modal p {
   color: #000000 !important;
 }
 
 /* Delete note modal buttons in dark mode */
-[data-theme="dark"] .delete-note-modal .btn {
+[data-theme="dark"] .delete-note-modal .btn-ghost {
   color: #000000 !important;
 }
 
