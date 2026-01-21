@@ -162,8 +162,8 @@ export default function NotesSection({ customerId, existingNotes }: NotesSection
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-red-50 rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 delete-note-modal">
+          <div className="bg-red-50 rounded-lg shadow-xl max-w-md w-full delete-note-modal">
             <div className="p-6 bg-red-50 rounded-lg delete-note-modal text-black">
               <div className="flex items-center gap-3 text-red-700 mb-4">
                 <AlertCircle className="w-6 h-6" />
