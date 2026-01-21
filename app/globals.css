@@ -167,13 +167,12 @@ body {
   background-color: #ffffff !important;
 }
 
-/* Delete note modal exception for dark mode */
-[data-theme="dark"] .delete-note-modal {
-  color: #000000 !important;
-}
-
+/* Delete note modal exception for dark mode - HIGHEST PRIORITY */
+[data-theme="dark"] .delete-note-modal,
+[data-theme="dark"] .delete-note-modal *,
 [data-theme="dark"] .delete-note-modal h3,
-[data-theme="dark"] .delete-note-modal p {
+[data-theme="dark"] .delete-note-modal p,
+[data-theme="dark"] .delete-note-modal div {
   color: #000000 !important;
 }
 
