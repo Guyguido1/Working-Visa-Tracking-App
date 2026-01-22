@@ -162,15 +162,15 @@ export default function ReportNoteHistory({ reportId, customerId, notes = [], du
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="text-black dark:text-black">
+                  <AlertDialogContent className="bg-base-100">
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-black dark:text-black">Delete Note</AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-700 dark:text-gray-700">
+                      <AlertDialogTitle>Delete Note</AlertDialogTitle>
+                      <AlertDialogDescription>
                         Are you sure you want to delete this note? This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="text-black dark:text-black">Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => handleDeleteNote(note.id)}
                         className="bg-red-500 hover:bg-red-600 text-white"
